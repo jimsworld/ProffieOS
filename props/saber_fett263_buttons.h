@@ -2,6 +2,7 @@
 *1 Button Controls based on SA22C prop
 Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force Player, Real Clash, Choreography Mode
    Dual Mode Ignition Sounds, Multi-Phase Control, Multi-Blast
+   Additional features adapted from BC and other prop files via defines (see below)
 
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
@@ -110,10 +111,16 @@ Standard Controls While Blade is OFF
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
-  NEW! Change Font
+  NEW! Manual Blade ID* = Hold AUX + Long Click PWR
+    *requires FETT263_MANUAL_BLADE_ID define
+    *replaces Change Font control
+  NEW! Change Font*
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
-  NEW! Copy Preset = Hold PWR + Long Click AUX
+  NEW! Manual Blade Array* = Hold PWR + Long Click AUX
+    *requires FETT263_MANUAL_BLADE_ARRAY
+    *replaces Copy Preset control 
+  NEW! Copy Preset* = Hold PWR + Long Click AUX
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -147,7 +154,8 @@ Standard Controls While Blade is ON
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
-      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use Edit Mode Color Editing styles, Color List** is used
+        **FETT263_REPLACE_CC_COLOR_LIST will use Edit Hue in place of Color List
       If styles use ColorChange<> then colors within the style are used
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
@@ -267,6 +275,13 @@ Edit Settings* (Settings Only version of Edit Mode)
     Cancel, Revert, Go Back = Click AUX
     Exit Edit Settings - Hold AUX
 
+OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
+  Enter Menu = While Off, Hold AUX + Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+    *Controls and selections vary by define, more information here: https://pod.hubbe.net/howto/menus.html
+    For full Fett263 Menu use:
+      #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+
 ---------- 1 Button Controls (based on SA22C prop) ----------
 NOTE: 
   Click = do short click (so Double Click is two short clicks in quick succession)
@@ -322,10 +337,16 @@ Standard Controls While Blade is OFF
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
-  NEW! Change Font
+  NEW! Manual Blade ID* = Triple Click + Long Click PWR
+    *requires FETT263_MANUAL_BLADE_ID and BLADE_ID_SCAN_MILLIS defines
+    *replaces Change Font control
+  NEW! Change Font*
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
-  NEW! Copy Preset = Quadruple (Four) Click + Hold PWR
+  NEW! Manual Blade Array* = Quadruple (Four) Click + Hold PWR
+    *requires FETT263_MANUAL_BLADE_ARRAY
+    *replaces Copy Preset control
+  NEW! Copy Preset* = Quadruple (Four) Click + Hold PWR
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -355,7 +376,8 @@ Standard Controls While Blade is ON
     To start/select track saber must be OFF
   NEW Control! Color Change = 4 Clicks PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
-      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use Edit Mode Color Editing styles, Color List** is used
+        **FETT263_REPLACE_CC_COLOR_LIST will use Edit Hue in place of Color List
       If styles use ColorChange<> then colors within the style are used
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
@@ -464,19 +486,37 @@ Edit Settings* (Settings Only version of Edit Mode)
     Cancel, Revert, Go Back = Long Click PWR
     Exit Edit Settings - Hold PWR
 
+OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
+  Enter Menu = While Off, Double Click and Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+    *Controls and selections vary by define, more information here: https://pod.hubbe.net/howto/menus.html
+    For full Fett263 Menu use:
+      #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+    
 ---------- || ----------
 
 OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_EDIT_MODE_MENU
   Enable Edit Mode Menu System
+  Cannot be combined with FETT263_EDIT_SETTINGS_MENU or MENU_SPEC_TEMPLATE
   Requires ENABLE_ALL_EDIT_OPTIONS
 
   FETT263_EDIT_SETTINGS_MENU
   Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)
   I recommend setting USB Type = "Serial + WebUSB" under Arduino > Tools to allow for style, font, track, color editing via ProffieOS Workbench
-  Cannot be combined with FETT263_EDIT_MODE_MENU
+  Cannot be combined with FETT263_EDIT_MODE_MENU or MENU_SPEC_TEMPLATE
   Requires ENABLE_ALL_EDIT_OPTIONS
+
+  MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+  Enable OS8 Menu System (full Fett263 Menu)
+  Cannot be combined with FETT263_EDIT_MODE_MENU or FETT263_EDIT_SETTINGS_MENU
+  Requires ENABLE_ALL_EDIT_OPTIONS
+  More information here: https://pod.hubbe.net/howto/menus.html
+
+  FETT263_REPLACE_CC_COLOR_LIST
+  Change ColorChange Mode for COLOR_ARG (Color Editing) styles to Hue Selection.
+  NOTE: Hue Selection will reduce available colors to changes in Hue only, cannot get to Whites, Silvers, etc. from a standard color
 
   FETT263_SAVE_CHOREOGRAPHY
   Enables Enhanced Battle Mode with Saved Choreography, cannot be used with FETT263_SPECIAL_ABILITIES
@@ -508,6 +548,14 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_SAY_BATTERY_PERCENT
   Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)
+
+  FETT263_MANUAL_BLADE_ID
+  Enables Manual Blade ID Scan via button control (see here: https://pod.hubbe.net/howto/blade-id.html)
+  *requires BLADE_ID_SCAN_MILLIS define, replaces "Change Font" control
+
+  FETT263_MANUAL_BLADE_ARRAY
+  Enables Manual Blade Array switching via button control (you need more than one Blade Array)
+  *replaces "Copy Preset" control
 
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
@@ -643,6 +691,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Changes Brightness Menu to Circular Control
   
 == Disable Features ==
+  FETT263_SIMPLIFIED_PROP - Disables the following default features* with one define
+    ("Change Font", "Change Style", "Copy Preset", "Battle Mode Toggle", "Multi-Blast Toggle", "Quote Player")
+    *Only applies to defaulted features, additional features are controlled by including defines to enable, remove those defines accordingly
+
   DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences - 
 
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
@@ -731,6 +783,23 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define SAY_COLOR_LIST
 #endif
 
+#if defined(FETT263_MANUAL_BLADE_ID) && !defined(FETT263_DISABLE_CHANGE_FONT)
+#define FETT263_DISABLE_CHANGE_FONT
+#endif
+
+#if defined(FETT263_MANUAL_BLADE_ARRAY) && !defined(FETT263_DISABLE_COPY_PRESET)
+#define FETT263_DISABLE_COPY_PRESET
+#endif
+
+#ifdef FETT263_SIMPLIFIED_PROP
+#define FETT263_DISABLE_CHANGE_FONT
+#define FETT263_DISABLE_CHANGE_STYLE
+#define FETT263_DISABLE_COPY_PRESET
+#define FETT263_DISABLE_BM_TOGGLE
+#define FETT263_DISABLE_MULTI_BLAST_TOGGLE
+#define FETT263_DISABLE_QUOTE_PLAYER
+#endif
+
 #if NUM_BUTTONS < 1
 #error /props/saber_fett263_buttons.h requires 1, 2 or 3 Buttons for operation
 #endif
@@ -761,6 +830,16 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(MENU_SPEC_TEMPLATE) && defined(FETT263_EDIT_SETTINGS_MENU)
 #error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_SETTINGS_MENU
+#endif
+
+#if defined(FETT263_REPLACE_CC_COLOR_LIST) && defined(FETT263_SAY_COLOR_LIST_CC)
+#error FETT263_SAY_COLOR_LIST_CC does not work with FETT263_REPLACE_CC_COLOR_LIST
+#endif
+
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+#define ACTIVE_CC_MODE CC_EDIT_COLOR
+#else
+#define ACTIVE_CC_MODE CC_COLOR_LIST
 #endif
 
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
@@ -933,37 +1012,6 @@ individual tastes.
 
 #endif
 
-#include "prop_base.h"
-#include "../sound/hybrid_font.h"
-#include "../sound/effect.h"
-#include "../common/current_preset.h"
-#include "../common/file_reader.h"
-#include "../common/malloc_helper.h"
-
-#ifdef FETT263_EDIT_MODE_MENU
-#include "../common/color.h"
-#include "../styles/edit_mode.h"
-#endif
-
-#undef PROP_TYPE
-#define PROP_TYPE SaberFett263Buttons
-
-EFFECT(dim); // for EFFECT_POWERSAVE
-EFFECT(battery); // for EFFECT_BATTERY_LEVEL
-EFFECT(bmbegin); // for Begin Battle Mode
-EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
-EFFECT(faston); // for EFFECT_FAST_ON
-EFFECT(blstbgn); // for Begin Multi-Blast
-EFFECT(blstend); // for End Multi-Blast
-EFFECT(push); // for Force Push gesture in Battle Mode
-EFFECT(tr);
-EFFECT2(trloop, trloop);
-#ifdef FETT263_USE_SETTINGS_MENU
-EFFECT(medit); // Edit Mode
-#endif
-
 #include "../sound/sound_library.h"
 
 class GestureControlFile : public ConfigFile {
@@ -1031,6 +1079,328 @@ public:
   int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
   int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 };
+
+GestureControlFile saved_gesture_control;
+
+#ifdef MENU_SPEC_TEMPLATE
+template<class SPEC>
+struct SwingGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.swingon;  }
+  void set(bool value) { 
+    saved_gesture_control.swingon = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SaySwingIgnition(); }
+};
+
+template<class SPEC>
+struct SwingOnSpeed : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    speed_ = saved_gesture_control.swingonspeed;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    speed_ += 50;
+    if (speed_ >= 600) speed_ = 600;
+  }
+  void prev() override {
+    speed_ -= 50;
+    if (speed_ <= 200) speed_ = 200;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (speed_ == 200) sound_library_.SayMinimum();
+    if (speed_ == 600) sound_library_.SayMaximum();
+    sound_library_.SayNumber(speed_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SaySwingOnSpeed();
+    sound_library_.SayNumber(speed_, SAY_WHOLE);
+    saved_gesture_control.swingonspeed = speed_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int speed_;
+};
+
+template<class SPEC>
+struct TwistOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.twiston;  }
+  void set(bool value) { 
+    saved_gesture_control.twiston = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayTwistIgnition(); }
+};
+
+template<class SPEC>
+struct ThrustOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.thruston;  }
+  void set(bool value) { 
+    saved_gesture_control.thruston = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayThrustIgnition(); }
+};
+
+template<class SPEC>
+struct StabOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.stabon;  }
+  void set(bool value) { 
+    saved_gesture_control.stabon = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayStabIgnition(); }
+};
+
+template<class SPEC>
+struct ForcePushGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.forcepush;  }
+  void set(bool value) { 
+    saved_gesture_control.forcepush = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayForcePush(); }
+};
+
+template<class SPEC>
+struct ForcePushLength : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    push_ = saved_gesture_control.forcepushlen;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    push_ += 1;
+    if (push_ >= 10) push_ = 10;
+  }
+  void prev() override {
+    push_ -= 1;
+    if (push_ <= 1) push_ = 1;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (push_ == 1) sound_library_.SayMinimum();
+    if (push_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(push_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayForcePushLength();
+    sound_library_.SayNumber(push_, SAY_WHOLE);
+    saved_gesture_control.forcepushlen = push_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int push_;
+};
+
+template<class SPEC>
+struct TwistOffGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.twistoff;  }
+  void set(bool value) { 
+    saved_gesture_control.twistoff = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayTwistRetraction(); }
+};
+
+template<class SPEC>
+struct PowerLock : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.powerlock;  }
+  void set(bool value) { 
+    saved_gesture_control.powerlock = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayPowerLock(); }
+};
+
+template<class SPEC>
+struct LockupDelay : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    delay_ = saved_gesture_control.lockupdelay;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    delay_ += 100;
+    if (delay_ >= 1200) delay_ = 1200;
+  }
+  void prev() override {
+    delay_ -= 100;
+    if (delay_ <= 200) delay_ = 200;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (delay_ == 1) sound_library_.SayMinimum();
+    if (delay_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(delay_, SAY_WHOLE);
+    sound_library_.SayMillis();
+  }
+  void select() { 
+    sound_library_.SayLockupDelay();
+    sound_library_.SayNumber(delay_, SAY_WHOLE);
+    sound_library_.SayMillis();
+    saved_gesture_control.lockupdelay = delay_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+    
+  int delay_;
+};
+
+template<class SPEC>
+struct ClashDetect : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    clash_ = saved_gesture_control.clashdetect;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    clash_ += 1;
+    if (clash_ >= 10) clash_ = 10;
+  }
+  void prev() override {
+    clash_ -= 1;
+    if (clash_ <= 1) clash_ = 1;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (clash_ == 1) sound_library_.SayMinimum();
+    if (clash_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(clash_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayClashDetectionLevel();
+    sound_library_.SayNumber(clash_, SAY_WHOLE);
+    saved_gesture_control.clashdetect = clash_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int clash_;
+};
+
+template<class SPEC>
+struct MaxClash : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    maxclash_ = saved_gesture_control.maxclash;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    maxclash_ += 1;
+    if (maxclash_ >= 16) maxclash_ = 16;
+  }
+  void prev() override {
+    maxclash_ -= 1;
+    if (maxclash_ <= prop_GetCurrentClashThreshold()) maxclash_ = prop_GetCurrentClashThreshold();
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (maxclash_ == prop_GetCurrentClashThreshold()) sound_library_.SayMinimum();
+    if (maxclash_ == 16) sound_library_.SayMaximum();
+    sound_library_.SayNumber(maxclash_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayMaximumClashStrength();
+    sound_library_.SayNumber(maxclash_, SAY_WHOLE);
+    saved_gesture_control.maxclash = maxclash_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int maxclash_;
+};
+
+template<class SPEC>
+class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu, 
+  mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>,
+  mode::SubMenuEntry<SwingOnSpeed<SPEC>, typename SPEC::SoundLibrary::tSwingOnSpeed>,
+  mode::DirectBoolEntry<SPEC, TwistOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, ThrustOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, StabOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, ForcePushGesture<SPEC>>,
+  mode::SubMenuEntry<ForcePushLength<SPEC>, typename SPEC::SoundLibrary::tForcePushLength>,
+  mode::DirectBoolEntry<SPEC, TwistOffGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, PowerLock<SPEC>>,
+  mode::SubMenuEntry<LockupDelay<SPEC>, typename SPEC::SoundLibrary::tLockupDelay>,
+  mode::SubMenuEntry<ClashDetect<SPEC>, typename SPEC::SoundLibrary::tClashDetectionLevel>,
+  mode::SubMenuEntry<MaxClash<SPEC>, typename SPEC::SoundLibrary::tMaximumClashStrength>
+> {};
+
+template<class SPEC>
+struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
+  typedef typename DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
+  typedef NewSettingsMenu<SPEC> SettingsMenu;
+};
+#endif
+
+#include "prop_base.h"
+#include "../sound/hybrid_font.h"
+#include "../sound/effect.h"
+#include "../common/current_preset.h"
+#include "../common/file_reader.h"
+#include "../common/malloc_helper.h"
+
+#ifdef FETT263_EDIT_MODE_MENU
+#include "../common/color.h"
+#include "../styles/edit_mode.h"
+#endif
+
+#undef PROP_TYPE
+#define PROP_TYPE SaberFett263Buttons
+
+EFFECT(dim); // for EFFECT_POWERSAVE
+EFFECT(battery); // for EFFECT_BATTERY_LEVEL
+EFFECT(bmbegin); // for Begin Battle Mode
+EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
+EFFECT(faston); // for EFFECT_FAST_ON
+EFFECT(blstbgn); // for Begin Multi-Blast
+EFFECT(blstend); // for End Multi-Blast
+EFFECT(push); // for Force Push gesture in Battle Mode
+EFFECT(tr);
+EFFECT2(trloop, trloop);
+#ifdef FETT263_USE_SETTINGS_MENU
+EFFECT(medit); // Edit Mode
+#endif
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+EFFECT(array);      // for Manual Blade Array switching
+#endif
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
 // Rehearsal / Choreography
@@ -1234,7 +1604,6 @@ public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
 
-  GestureControlFile saved_gesture_control;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   SavedRehearsal saved_choreography;
 #endif
@@ -1644,7 +2013,12 @@ SaberFett263Buttons() : PropBase() {}
       if (a < -M_PI) a+=M_PI*2;
       float angle = 100;
       switch (color_mode_) {
-        case EDIT_COLOR: angle = H_ANGLE; break;
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        case CC_EDIT_COLOR:
+#endif
+	case EDIT_COLOR: 
+          angle = H_ANGLE; 
+          break;
         case ZOOM_COLOR:
         case CC_ZOOM_COLOR:
           angle = EDIT_MODE_ZOOM;
@@ -1666,6 +2040,9 @@ SaberFett263Buttons() : PropBase() {}
       }
       switch (color_mode_) {
         default: break;
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        case CC_EDIT_COLOR:
+#endif
         case EDIT_COLOR:
         case ZOOM_COLOR:
         case CC_ZOOM_COLOR:
@@ -1724,7 +2101,9 @@ SaberFett263Buttons() : PropBase() {}
     Color16 color_source;
      switch (color_mode_) {
       case COLOR_LIST:
+#ifndef FETT263_REPLACE_CC_COLOR_LIST
       case CC_COLOR_LIST:
+#endif
         color_source = Color16(color_list_[dial_].color);
         break;
       default:
@@ -1737,7 +2116,7 @@ SaberFett263Buttons() : PropBase() {}
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
 #if NUM_BLADES > 1
-    if (color_mode_ == CC_COLOR_LIST  || color_mode_ == CC_ZOOM_COLOR) {
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) {
       for (int i = 1; i <= NUM_BLADES; i++) {
         current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
       }
@@ -1750,14 +2129,54 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
-  // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST
+#ifndef DISABLE_COLOR_CHANGE
+  void OriginalColorChangeMode() {
+    if (!current_style()) return;
+    if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
+      current_tick_angle_ = fusor.angle2();
+      bool handles_color_change = false;
+#define CHECK_SUPPORTS_COLOR_CHANGE(N) \
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
+      ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
+      if (!handles_color_change) {
+        STDOUT << "Entering smooth color change mode.\n";
+        current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
+
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
+      } else {
+#ifdef COLOR_CHANGE_DIRECT
+        STDOUT << "Color change, TICK+\n";
+        SaberBase::UpdateVariation(1);
+#else
+        STDOUT << "Entering stepped color change mode.\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
+#endif
+      }
+    } else {
+      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
+    }
+  }
+
+  void SelectColorChangeMode() {
+#ifndef MENU_SPEC_TEMPLATE
+    OriginalColorChangeMode();
+#else
+    ToggleColorChangeMode();
+#endif
+}
+
+#endif // DISABLE_COLOR_CHANGE
+
+  // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST or CC_EDIT_COLOR
   void ToggleCCMode() {
     bool uses_rgb_arg = false;
     for (int i = 1; i <= NUM_BLADES; i++)
       uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
-      ToggleColorChangeMode();
+      SelectColorChangeMode();
 #endif
     } else {
       bool handles_color_change;
@@ -1765,6 +2184,20 @@ SaberFett263Buttons() : PropBase() {}
       handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
       ONCEPERBLADE(USES_COLOR_CHANGE)
       if (!handles_color_change) {
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        color_mode_ = CC_EDIT_COLOR;
+        show_color_all_.Start();
+        for (int i = 1; i <= NUM_BLADES; i++) {
+          if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+            ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+            saved_color_ = GetColorArg(i, BASE_COLOR_ARG);
+            break;
+          }
+        }
+        hsl_ = saved_color_.toHSL();
+        hsl_angle_ = fusor.angle2();
+        edit_color_ = true;
+#else
         color_mode_ = CC_COLOR_LIST;
         show_color_all_.Start();
         for (int i = 1; i <= NUM_BLADES; i++) {
@@ -1775,14 +2208,88 @@ SaberFett263Buttons() : PropBase() {}
         }
         current_menu_angle_ = fusor.angle2();
         dial_ = -1;
+#endif
         hybrid_font.PlayCommon(&SFX_ccbegin);
       } else {
 #ifndef DISABLE_COLOR_CHANGE
-        ToggleColorChangeMode();
+        SelectColorChangeMode();
 #endif
       }
     }	  
   }
+
+#if defined(FETT263_MANUAL_BLADE_ARRAY) || defined(FETT263_MANUAL_BLADE_ID)
+
+  bool use_fake_id_ = false;
+  float fake_id_ = 0;
+  size_t best_config_before_faking_ = SIZE_MAX;
+  bool play_no_change_sound_ = false;
+
+#ifdef BLADE_ID_SCAN_MILLIS
+  float id(bool announce = false) override {
+    if (use_fake_id_) {
+      float real_id = PropBase::id(announce);
+      size_t real_best_config = FindBestConfigForId(real_id);
+
+      if (real_best_config != best_config_before_faking_) {
+        // Real blade has changed, exit manual mode
+        use_fake_id_ = false;
+        find_blade_again_pending_ = true;
+        if (current_config - blades == real_best_config) {
+          play_no_change_sound_ = true;
+        }
+        return real_id;
+      }
+      return fake_id_;
+    }
+
+    return PropBase::id(announce);
+  }
+
+  int GetNoBladeLevelBefore() override {
+    int ohm;
+    if (best_config_before_faking_ != SIZE_MAX) {
+      ohm = blades[best_config_before_faking_].ohm;
+      best_config_before_faking_ = SIZE_MAX;
+    } else {
+      ohm = current_config->ohm;
+    }
+    return ohm / NO_BLADE;
+  }
+
+#else
+  float id(bool announce = false) override {
+    return use_fake_id_ ? fake_id_ : PropBase::id(announce);
+  }
+#endif  // BLADE_ID_SCAN_MILLIS
+
+  void TriggerBladeID() {
+    use_fake_id_ = false;
+    best_config_before_faking_ = SIZE_MAX;
+    FindBladeAgain();
+    PlayArraySound();
+  }
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+  void NextBladeArray() {
+    if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
+    size_t next_array = (current_config - blades + 1) % NELEM(blades);
+    fake_id_ = blades[next_array].ohm;
+    use_fake_id_ = true;
+
+    FindBladeAgain();
+    PlayArraySound();
+  }
+
+  void PlayArraySound() {
+    if (SFX_array) {
+      SFX_array.Select(current_config - blades);
+      hybrid_font.PlayPolyphonic(&SFX_array);
+    } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
+      hybrid_font.PlayCommon(&SFX_font);
+    }
+  }
+#endif
+#endif
 
   void DoInteractivePreon() {
     if (CheckInteractivePreon()) {
@@ -1946,6 +2453,53 @@ SaberFett263Buttons() : PropBase() {}
     PropBase::Loop();
     DetectTwist();
     Vec3 mss = fusor.mss();
+#ifndef DISABLE_COLOR_CHANGE
+#define TICK_ANGLE (M_PI * 2 / 12)
+    switch (SaberBase::GetColorChangeMode()) {
+      case SaberBase::COLOR_CHANGE_MODE_NONE:
+        break;
+      case SaberBase::COLOR_CHANGE_MODE_STEPPED: {
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > TICK_ANGLE * 2/3) {
+          current_tick_angle_ += TICK_ANGLE;
+          if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
+          STDOUT << "TICK+\n";
+          SaberBase::UpdateVariation(1);
+        }
+        if (a < -TICK_ANGLE * 2/3) {
+          current_tick_angle_ -= TICK_ANGLE;
+          if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
+          STDOUT << "TICK-\n";
+          SaberBase::UpdateVariation(-1);
+        }
+        break;
+      }
+      case SaberBase::COLOR_CHANGE_MODE_ZOOMED: {
+#define ZOOM_ANGLE (M_PI * 2 / 2000)
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        int steps = (int)floor(fabs(a) / ZOOM_ANGLE - 0.3);
+        if (steps < 0) steps = 0;
+        if (a < 0) steps = -steps;
+        current_tick_angle_ += ZOOM_ANGLE * steps;
+        SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + steps));
+        break;
+      }
+      case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
+        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
+        break;
+    }
+    if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
+      STDOUT << " variation = " << SaberBase::GetCurrentVariation()
+             << " ccmode = " << SaberBase::GetColorChangeMode()
+//           << " color = " << current_config->blade1->current_style()->getColor(0)
+             << "\n";
+    }
+#endif
     if (
 #ifdef FETT263_SPIN_MODE
 	!spin_mode_ && 
@@ -2479,7 +3033,7 @@ SaberFett263Buttons() : PropBase() {}
 
   // Check if ShowColor for ColorChange / Color Editing is active to prevent other events
   bool CheckShowColorCC() {
-    if (color_mode_ == CC_COLOR_LIST || color_mode_ == CC_ZOOM_COLOR) return true;
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) return true;
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return true;
     return false;
   }
@@ -2526,7 +3080,11 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
       return true;
     }
-    if (color_mode_ == COLOR_LIST || color_mode_ == CC_COLOR_LIST) {
+    if (color_mode_ == COLOR_LIST
+#ifndef FETT263_REPLACE_CC_COLOR_LIST
+     || color_mode_ == CC_COLOR_LIST
+#endif
+     ) {
       hsl_ = Color16(color_list_[dial_].color).toHSL();
     }
     switch (color_mode_) {
@@ -2536,7 +3094,7 @@ SaberFett263Buttons() : PropBase() {}
         hsl_angle_ = fusor.angle2();
         return true;
         break;
-      case CC_COLOR_LIST:
+      case ACTIVE_CC_MODE:
         color_mode_ = CC_ZOOM_COLOR;
         edit_color_ = true;
         hsl_angle_ = fusor.angle2();
@@ -2552,7 +3110,7 @@ SaberFett263Buttons() : PropBase() {}
   bool EndColorZoom() {
 #ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-      ToggleColorChangeMode();
+      SelectColorChangeMode();
       return true;
     }
 #endif
@@ -2563,7 +3121,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuChoice();
         return true;
         break;
-      case CC_COLOR_LIST:
+      case ACTIVE_CC_MODE:
       case CC_ZOOM_COLOR:
         edit_color_ = false;
         hybrid_font.PlayCommon(&SFX_ccend);
@@ -2891,7 +3449,7 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_COLOR;
             sound_library_.SaySelect();
             variation_revert_ = SaberBase::GetCurrentVariation();
-            ToggleColorChangeMode();
+            SelectColorChangeMode();
 #endif
             break;
           } else {
@@ -4360,7 +4918,7 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #ifndef DISABLE_COLOR_CHANGE
         SaberBase::SetVariation(variation_revert_);
-        ToggleColorChangeMode();
+        SelectColorChangeMode();
 #endif
         MenuCancel();
         break;
@@ -4604,7 +5162,11 @@ SaberFett263Buttons() : PropBase() {}
 
   enum EditColorMode {
     NONE,
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+    CC_EDIT_COLOR,
+#else
     CC_COLOR_LIST,
+#endif
     CC_ZOOM_COLOR,
     COLOR_LIST,
     EDIT_COLOR,
@@ -5072,7 +5634,7 @@ SaberFett263Buttons() : PropBase() {}
             // Just exit color change mode.
             // Don't turn saber off.
             if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-              ToggleColorChangeMode();
+              SelectColorChangeMode();
             }
             return true;
           }
@@ -5126,7 +5688,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
+          SelectColorChangeMode();
           return true;
         }
 #endif      
@@ -5173,6 +5735,13 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
+#ifdef FETT263_MANUAL_BLADE_ID
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
+      if (menu_) return true;
+      TriggerBladeID();
+      return true;
+#endif
+
 #ifndef FETT263_DISABLE_CHANGE_FONT
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
@@ -5183,6 +5752,13 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
         CheckQuote();
         return true;
+
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
+        if (menu_) return true;
+        NextBladeArray();
+        return true;
+#endif
 
 #ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
@@ -5350,6 +5926,13 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SaySelectPreset();
         return true;
 
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
+        if (menu_) return true;
+        NextBladeArray();
+        return true;
+#endif
+
 #ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
         if (menu_) return true;
@@ -5427,7 +6010,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
+          SelectColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
@@ -5501,6 +6084,13 @@ SaberFett263Buttons() : PropBase() {}
         ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
+#endif
+
+#ifdef FETT263_MANUAL_BLADE_ID
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF | BUTTON_AUX):
+      if (menu_) return true;
+      TriggerBladeID();
+      return true;
 #endif
 
 #ifndef FETT263_DISABLE_CHANGE_FONT
@@ -5612,11 +6202,11 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             SaberBase::SetVariation(0);
-            ToggleColorChangeMode();
+            SelectColorChangeMode();
             return true;
           }
 #endif
-          if (color_mode_ == CC_COLOR_LIST) {
+          if (color_mode_ == ACTIVE_CC_MODE) {
             color_mode_ = NONE;
             show_color_all_.Stop();
             sound_library_.SayRevert();
@@ -5847,6 +6437,9 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return false;
         }
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        if (color_mode_ == CC_EDIT_COLOR) return true;
+#else
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
@@ -5857,6 +6450,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
+#endif
         if (menu_) {
           MenuDial(1);
           return true;
@@ -5868,6 +6462,9 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return false;
         }
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        if (color_mode_ == CC_EDIT_COLOR) return true;
+#else
         if (color_mode_ == CC_COLOR_LIST) {
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
@@ -5879,6 +6476,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
+#endif
         if (menu_) {
           MenuDial(-1);
           return true;
@@ -6534,6 +7132,7 @@ private:
   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
   // would otherwise be truncated by change in state
   EditColorMode color_mode_;
+  Color16 saved_color_;
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
@@ -6547,7 +7146,6 @@ private:
 #endif
 #ifdef FETT263_EDIT_MODE_MENU
   uint32_t variation_revert_; // Variation revert value
-  Color16 saved_color_;
   int effect_num_; // Effect Arg Number
   int copy_blade_; // Blade to Copy from
   int set_num_; // Settings Arg Number
