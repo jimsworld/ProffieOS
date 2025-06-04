@@ -21,7 +21,7 @@
 // armor_compromised.wav - for when armor falls to 0
 // boot.wav - Bootup welcome message
 // death.wav - for when health is 0
-// clash**.wav - physical clash sounds
+// clsh01.wav to clsh08.wav - physical clash sounds
 // health00.wav to health100.wav - for health alert sounds
 // armor00.wav to armor100.wav - for armor readout sounds
 // fuzz_high.wav, fuzz_low.wav - for pre-armor readout notification sound
@@ -183,27 +183,89 @@ public:
   // Clashes
   void Clash(bool stab, float strength) override {
     // Don't allow Clashes if dead.
-    if (health_ == 0) {
+    if (health_ <= 15) {
       return;
     }
 
     // If HEVTimer and PropBase's clash_timeout_ are true to activate Clash.
     // Otherwise return early.
+    // Note: this->clash_timeout_ is from PropBase, typically 500ms.
     if (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_)) {
       return;
     }
     
-    // Forward Clash event. No Stabs!
-    PropBase::Clash(false, strength);
+    // PropBase::Clash(false, strength); // DO NOT CALL - this prevents its sound and log.
+                                        // We will handle visual effects directly.
+
+    // Replicate the visual effect triggering part of PropBase::Clash2()
+    // 1. Set the global clash strength. Hev inherits SetClashStrength from SaberBase.
+    this->SetClashStrength(strength); 
+    // 2. Trigger the EFFECT_CLASH for blade styles. DoEffectR uses a random location.
+    SaberBase::DoEffectR(EFFECT_CLASH);
 
     // Damage is based on strength, capped at 50
     int damage = std::min((int)(strength * 4), 50);
-    float v = (strength - GetCurrentClashThreshold()) / 3;
+    // 'v' is a measure of impact intensity above threshold.
+    float v = (strength - GetCurrentClashThreshold()) / 3.0f;
+    v = std::max(0.0f, v); // Ensure v is not negative
 
-    // Play Clash sounds based on strength
-    SFX_clash.SelectFloat(v);
-    SFX_clsh.SelectFloat(v);
-    SFX_stab.SelectFloat(v);
+    // Determine hit severity and type for the detailed SFX_clsh from 'clsh' folder
+    bool is_major_hit = (damage >= 25);
+    // Determine hit type: 1/4 chance for fracture, 3/4 for laceration
+    bool is_fracture_hit = (random(4) == 0); 
+
+    int sfx_index = 0;
+    if (is_major_hit) {
+      if (is_fracture_hit) {
+        // Major Fracture: clsh08.wav
+        sfx_index = 8;
+      } else {
+        // Major Laceration: clsh05.wav, clsh06.wav, clsh07.wav
+        // Select among these 3 based on intensity 'v'.
+        // 'v' is already calculated and clamped >= 0.
+        // Normalize v to a 0.0-1.0 range.
+        // Assuming v typically ranges 0.0 to ~3.0 for useful selection across 3 files.
+        // Adjust the divisor (3.0f) if your 'v' values have a different typical max.
+        float normalized_v = std::min(1.0f, v / 3.0f); 
+        int laceration_sub_index;
+        if (normalized_v < (1.0f / 3.0f)) { // Lowest third intensity
+          laceration_sub_index = 0;
+        } else if (normalized_v < (2.0f / 3.0f)) { // Middle third intensity
+          laceration_sub_index = 1;
+        } else { // Highest third intensity
+          laceration_sub_index = 2;
+        }
+        sfx_index = 5 + laceration_sub_index; // clsh05, clsh06, or clsh07
+      }
+    } else { // Minor hit
+      if (is_fracture_hit) {
+        // Minor Fracture: clsh04.wav
+        sfx_index = 4;
+      } else {
+        // Minor Laceration: clsh01.wav, clsh02.wav, clsh03.wav
+        float normalized_v = std::min(1.0f, v / 3.0f);
+        int laceration_sub_index;
+        if (normalized_v < (1.0f / 3.0f)) { // Lowest third intensity
+          laceration_sub_index = 0;
+        } else if (normalized_v < (2.0f / 3.0f)) { // Middle third intensity
+          laceration_sub_index = 1;
+        } else { // Highest third intensity
+          laceration_sub_index = 2;
+        }
+        sfx_index = 1 + laceration_sub_index; // clsh01, clsh02, or clsh03
+      }
+    }
+
+    // Log the selected SFX index
+    if (sfx_index > 0) {
+      PVLOG_NORMAL << "Hev::Clash: Playing clsh sound index: " << sfx_index << "\n";
+    }
+
+    // Select the specific clshXX.wav file and play it
+    if (sfx_index > 0) { // Ensure a valid index was set (1-8)
+      SFX_clsh.Select(sfx_index);
+      hybrid_font.PlayCommon(&SFX_clsh);
+    }
 
     // Play Armor Alarm if Damage is 30 or more
     if (damage >= 30) {
