@@ -287,11 +287,9 @@
 //      - Delay (ms) before Hazard damage starts after checking and    //
 //        triggering Hazard. Allows time for HEV Voice Line to finish. //
 //                                                                     //
-//  HEV_HAZARD_DECREASE_MIN_MS                                         //
-//      - Minimum time (ms) between each tick of Hazard damage.        //
-//                                                                     //
-//  HEV_HAZARD_DECREASE_MAX_MS                                         //
-//      - Maximum time (ms) between each tick of Hazard damage.        //
+//  HEV_HAZARD_DECREASE_MS                                             //
+//      - Time (ms) between each tick of Hazard damage.                //
+//        Lower = faster damage-over-time.                             //
 //                                                                     //
 //  HEV_HAZARD_AFTER_REVIVE_MS                                         //
 //      - Time (ms) after reviving before Hazards can happen again.    //
@@ -316,11 +314,8 @@
 #ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
 #endif
-#ifndef HEV_HAZARD_DECREASE_MIN_MS
-#define HEV_HAZARD_DECREASE_MIN_MS 1000
-#endif
-#ifndef HEV_HAZARD_DECREASE_MAX_MS
-#define HEV_HAZARD_DECREASE_MAX_MS 4000
+#ifndef HEV_HAZARD_DECREASE_MS
+#define HEV_HAZARD_DECREASE_MS 1000
 #endif
 #ifndef HEV_HAZARD_AFTER_REVIVE_MS
 #define HEV_HAZARD_AFTER_REVIVE_MS 60000
@@ -358,19 +353,22 @@ EFFECT(stun);
 
 struct HEVTimerBase {
   uint32_t start_ = 0;
+
   uint32_t interval_ = 0;
+
   bool active_ = false;
 
   void reset() { active_ = false; }
+  
   void start() { active_ = true; start_ = millis(); }
-  void configure(uint32_t interval) { interval_ = interval; }
-  void configure_random(uint32_t min_ms, uint32_t max_ms) {
-    interval_ = min_ms + random(max_ms - min_ms + 1);
-  }
 
+  void configure(uint32_t interval) { interval_ = interval; }
+
+  // Returns true if timer is inactive or timeout exceeded.
   bool check() {
     return !active_ || (millis() - start_ > interval_);
   }
+
   bool running() const {
     return active_ && (millis() - start_) <= interval_;
   }
@@ -387,9 +385,8 @@ public:
   //                                Debounce to prevent false Clashes.   //
   // - timer_random_event_        - Interval timer for Random Hazards.   //
   //                                Controls how often Hazards can occur.//
-  // - timer_hazard_delay_        - Delay between event trigger and      //
-  //                                Hazard DPS. Also used as a gap for   //
-  //                                voice to end before stun sfx start.  //
+  // - timer_hazard_delay_        - Delay inbetween event trigger and    //
+  //                                Hazard dps. Gap for voice to finish. //
   // - timer_hazard_after_revive_ - Cooldown after user revives.         //
   //                                Blocks Hazards until timer is done.  //
   // - timer_health_increase_     - Interval for Health recharge.        //
@@ -436,7 +433,7 @@ public:
 
   Hazard current_hazard_ = HAZARD_NONE;
 
-  // Calculate Physical and Hazard Damage
+  // Calculate Physical Damage
   void DoDamage(int damage, bool quiet = false, DamageType type = DAMAGE_PHYSICAL) {
     int previous_health = health_;
     int previous_armor = armor_;
@@ -471,6 +468,7 @@ public:
     if (armor_ < 0) armor_ = 0;
 
     // (HEV VOICE LINE) Logic for Armor Compromised
+    // if (previous_armor > 0 && armor_ == 0 && health_ == 0) {
     if (previous_armor > 0 && armor_ == 0) {
       SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
@@ -487,8 +485,9 @@ public:
     
     // (HEV VOICE LINE) Logic for Health Alert
     // Only plays when Health enters a new multiple of 10
+    // and only if alive and health is less than 50. (avoid 50 silent wavs)
     int new_tens = health_ / 10;
-    if (tens != new_tens) {
+    if (tens != new_tens && health_ != 0 && health_ < 50) {
       SaberBase::DoEffect(EFFECT_USER1, 0.0);
     }
 
@@ -501,6 +500,9 @@ public:
   // Armor Readout
   void armor_readout() {
     PVLOG_NORMAL << "Current Armor: " << armor_ << "\n";
+
+    int armor_to_variation = round((armor_ * 32765.0) / 100.0);
+    SaberBase::SetVariation(armor_to_variation);
 
     // Play random "fuzz" sound only if armor is above 0.
     if (armor_ > 0) {
@@ -520,7 +522,7 @@ public:
   // Clashes
   void Clash(bool stab, float strength) override {
     // Don't process clashes if dead or during cooldown.
-    if (health_ == 0 || (timer_clash_.active_ && !timer_clash_.check())) {
+    if (!SaberBase::IsOn() || health_ == 0 || (timer_clash_.active_ && !timer_clash_.check())) {
       return;
     }
 
@@ -548,8 +550,8 @@ public:
 
   // Random Hazards
   void CheckRandomEvent() {
-    // Skip Hazard check if dead or during revive cooldown
-    if (health_ == 0 || !timer_hazard_after_revive_.check()) {
+    // Skip Hazard check if orr, dead, or during revive cooldown
+    if (!SaberBase::IsOn() || health_ == 0 || !timer_hazard_after_revive_.check()) {
       return;
     }
 
@@ -602,11 +604,7 @@ public:
         return;
       }
 
-      // Interval for continuous damage is randomized between min and max
-      timer_hazard_delay_.configure_random(
-        HEV_HAZARD_DECREASE_MIN_MS,
-        HEV_HAZARD_DECREASE_MAX_MS
-      );
+      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
       timer_hazard_delay_.start();
     }
   }
@@ -671,6 +669,12 @@ public:
         On();
         return true;
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
+        if (current_hazard_) {
+          current_hazard_ = HAZARD_NONE;
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+          timer_random_event_.reset();
+          timer_random_event_.start();
+        }
         Off();
         return true;
 
@@ -696,6 +700,7 @@ public:
       // Double-click AUX for Armor Readout.
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
+        SaberBase::DoEffect(EFFECT_USER8, 0.0);
         armor_readout();
         return true;
 
@@ -779,6 +784,9 @@ public:
     // alongside death sound. However all pending sounds should be cleared.
     switch (effect) {
       default: return;
+      case EFFECT_BOOT:
+        hybrid_font.PlayCommon(&SFX_boot);
+        return;
 
       // (ENVIRONMENTAL FX) Hazard SFX
       case EFFECT_STUN:
@@ -792,11 +800,10 @@ public:
     
       // (HEV VOICE LINE) Health Alert
       case EFFECT_USER1:
-        if (health_ == 0) return; // Don't queue health sounds if dead
         SFX_health.SelectFloat(health_ / 100.0);
         SOUNDQ->Play(&SFX_health);
         return;
-    
+
       // (HEV UI SOUNDS) Death Sound
       case EFFECT_EMPTY:
         if (health_ == 0) {
