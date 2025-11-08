@@ -673,7 +673,6 @@ public:
           current_hazard_ = HAZARD_NONE;
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
           timer_random_event_.reset();
-          timer_random_event_.start();
         }
         Off();
         return true;
