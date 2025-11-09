@@ -326,6 +326,9 @@
 #ifndef HEV_ARMOR_INCREASE_MS
 #define HEV_ARMOR_INCREASE_MS 100
 #endif
+#ifndef HEV_HEALTH_ANNOUNCEMENT_CHANCE
+#define HEV_HEALTH_ANNOUNCEMENT_CHANCE 50
+#endif
 
 #include "prop_base.h"
 #include <cmath>
@@ -486,9 +489,30 @@ public:
     // (HEV VOICE LINE) Logic for Health Alert
     // Only plays when Health enters a new multiple of 10
     // and only if alive and health is less than 50. (avoid 50 silent wavs)
+    // Configurable chance to announce and reduce spam.
     int new_tens = health_ / 10;
     if (tens != new_tens && health_ != 0 && health_ < 50) {
-      SaberBase::DoEffect(EFFECT_USER1, 0.0);
+      if (random(100) < HEV_HEALTH_ANNOUNCEMENT_CHANCE) {
+        // Map health ranges to announcements
+        int health_range = (health_ >= 31) ? 3 : (health_ >= 11) ? 2 : 1;
+        const char* health_message = (health_range == 3) ? "Seek Medical Attention" : 
+                                     (health_range == 2) ? "Vital Signs Critical" : 
+                                     "User Death Imminent";
+        
+        PVLOG_NORMAL << "Health Alert: health=" << health_ << " range=" << health_range 
+                     << " (" << health_message << ")\n";
+        SaberBase::DoEffect(EFFECT_USER1, 0.0, health_range);  // Pass health_range as sound_number
+        
+        // For health ranges 1 and 2, 50% chance to append "Seek Medical Attention"
+        int roll = random(100);
+        if (health_range < 3 && roll < 50) {
+          PVLOG_NORMAL << "  + Appending health3 (Seek Medical Attention)\n";
+          SFX_health.Select(3);
+          SOUNDQ->Play(SoundToPlay(&SFX_health));
+        } else if (health_range < 3) {
+          PVLOG_NORMAL << "  + NO append health3 (failed 50% chance roll)\n";
+        }
+      }
     }
 
     // Print Damage, Health and Armor
@@ -550,7 +574,7 @@ public:
 
   // Random Hazards
   void CheckRandomEvent() {
-    // Skip Hazard check if orr, dead, or during revive cooldown
+    // Skip Hazard check if OFF, dead, or during revive cooldown
     if (!SaberBase::IsOn() || health_ == 0 || !timer_hazard_after_revive_.check()) {
       return;
     }
@@ -666,6 +690,10 @@ public:
     switch (EVENTID(button, event, modifiers)) {
       // On/Off long-click
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+#ifdef LIGHTS_ON_RESETS_HEALTH_ARMOR
+        health_ = 100;
+        armor_ = 100;
+#endif
         On();
         return true;
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
@@ -792,16 +820,41 @@ public:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
+       // (HEV VOICE LINE) Health Alert
+       case EFFECT_USER1:
+         if (health_ == 0) return; // Don't queue health sounds if dead
+         if (SaberBase::sound_number >= 0) {
+           // Files are 1-indexed (health01.wav, health02.wav,health03.wav) but selection is 0-indexed
+           SoundToPlay stp(&SFX_health, (int)SaberBase::sound_number - 1);
+           stp.effect_to_trigger_ = EFFECT_USER1_STEP2;
+           SOUNDQ->Play(stp);
+         }
+         return;
+
+      case EFFECT_USER1_STEP2: {
+        // Get the sound length when the effect actually triggers for WavLen use.
+        RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_health);
+        if (tmp) {
+          SaberBase::sound_length = tmp->length();
+        }
+        // PVLOG_NORMAL << "******** STEP2 effect triggered SaberBase::sound_length = " << SaberBase::sound_length << "\n";
+        return;
+      }
+
       // (HEV VOICE LINE) Armor Compromised
       case EFFECT_USER2:
-        SOUNDQ->Play(&SFX_armor_compromised);
+        // PVLOG_NORMAL << "******** Queueing SFX_armor_compromised sound with STEP2 trigger\n";
+        SOUNDQ->Play(SoundToPlay(&SFX_armor_compromised, EFFECT_USER2_STEP2));
         return;
-    
-      // (HEV VOICE LINE) Health Alert
-      case EFFECT_USER1:
-        SFX_health.SelectFloat(health_ / 100.0);
-        SOUNDQ->Play(&SFX_health);
+
+      case EFFECT_USER2_STEP2: {
+        RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_armor_compromised);
+        if (tmp) {
+          SaberBase::sound_length = tmp->length();
+        }
+        // PVLOG_NORMAL << "******** STEP2 effect triggered SaberBase::sound_length = " << SaberBase::sound_length << "\n";
         return;
+      }
 
       // (HEV UI SOUNDS) Death Sound
       case EFFECT_EMPTY:
