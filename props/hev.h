@@ -15,7 +15,7 @@
 //                    ─────────────────────────                        //
 // --2 BUTTON SETUP--                                                  //
 //                                                                     //
-// - POWER Button:                                                     //
+// - PWR Button:                                                       //
 //     - Long-click           - ON/OFF                                 //
 //     - Hold                 - Recharge Armor                         //
 //     - Double-click         - Toggle track                           //
@@ -63,9 +63,9 @@
 // - hazard**.wav            - Hazard Alerts                           //
 // - morphine.wav            - Plays after a Major Clash               //
 // - minor_laceration.wav    - Plays minor lacerations detected quote  //
-// - minor_fracture.wav      - Plays minor fractures detected quote    //
+// - minor_fracture.wav      - Plays minor fracture detected quote     //
 // - major_laceration.wav    - Plays major lacerations detected quote  //
-// - major_fracture.wav      - Plays major fractures detected quote    //
+// - major_fracture.wav      - Plays major fracture detected quote     //
 //                                                                     //
 //------------------------ HEV UI SOUNDS ------------------------------//
 //                                                                     //
@@ -78,11 +78,11 @@
 // - endlock.wav             - End health charge                       //
 // - font.wav                - Weapon select SFX (placeholder)         //
 // - fuzz**.wav              - Subtle alert // precedes armor**.wav    //
-// - in.wav                  - Torch ON                                //
+// - in.wav                  - Torch OFF                               //
 // - lb.wav                  - Looping armor charge                    //
 // - lock.wav                - Looping health charge                   //
 // - medkit.wav              - Medkit SFX // health pickup             //
-// - out.wav                 - Torch OFF                               //
+// - out.wav                 - Torch ON                                //
 // - armor00.wav             - No Armor SFX // Armor = 0               //
 //                                                                     //
 //-------------------- ENVIRONMENTAL EFFECTS --------------------------//
@@ -105,7 +105,7 @@
 // ▪ Inside each alt**/ folder, create an altchng/ folder:             //
 // ▪ Inside each altchng/ folder:                                      //
 //    - Include one file: blank.wav                                    //
-//      → A silent placeholder used to satisfy the folder structure.   //
+//      → A silent placeholder to satisfy the altchng structure.       //
 // ▪ Inside each alt**/ folder, create a stun/ folder:                 //
 // ▪ Inside each stun/ folder:                                         //
 //    - Include the (ENVIRONMENTAL FX) that match                      //
@@ -122,101 +122,49 @@
 //                                                                     //
 //------------------------- Health Alerts -----------------------------//
 //                                                                     //
+// ▪ Health Alerts only active when Health is 50 or below.             //
 // ▪ When Health drops to a lower 10th decimal (e.g., from 43 → 36),   //
 //   a Health Alert (health**.wav) will play, (HEV VOICE LINE).        //
-//                                                                     //
-// ▪ The suit will say state different Health Alerts, depending on     //
-//   what health dropped down to. Below are the health thresholds:     //
-//                                                                     //
+// ▪ The suit may say 1 of 3 Health Alert statements, depending on     //
+//   what Health dropped to:                                           //
 //   - ≤ 10: "User Death Imminent"    - Range: health01 - health10     //
 //   - ≤ 30: "Vital Signs Critical"   - Range: health11 - health30     //
 //   - ≤ 50: "Seek Medical Attention" - Range: health31 - health50     //
-//                                                                     //
-// ▪ Not all wavs have audio, therefore some wavs are blank, which     //
-//   creates an **element of chance** for Health Alerts to play.       //
-//   This has been configured directly in the health folder in the     //
-//   sound font.                                                       //
-//                                                                     //
-// ▪ The following table shows which health** files in the font        //
-//   have actual voice lines (✓ = has audio, blank = no audio).       //
-//
-//   1–10: "User Death Imminent"
-//   health01  ✓    health06  ✓
-//   health02  ✓    health07
-//   health03  ✓    health08  ✓
-//   health04  ✓    health09  ✓
-//   health05  ✓    health10
-//
-//   11–30: "Vital Signs Critical"
-//   health11  ✓    health18  ✓    health25
-//   health12  ✓    health19       health26  ✓
-//   health13       health20  ✓    health27  ✓
-//   health14  ✓    health21  ✓    health28
-//   health15  ✓    health22       health29  ✓
-//   health16       health23  ✓    health30  ✓
-//   health17  ✓    health24
-//
-//   31–50: "Seek Medical Attention"
-//   health31       health38  ✓    health45
-//   health32  ✓    health39       health46  ✓
-//   health33       health40  ✓    health47
-//   health34  ✓    health41       health48  ✓
-//   health35       health42  ✓    health49
-//   health36  ✓    health43       health50  ✓
-//   health37       health44  ✓
-//
-// ▪ There are no Health Alerts when Health is above 50. So,           //
-//   health51 - health100 are blank.                                   //
-//                                                                     //
-// ▪ health00 is blank. When Health is 0, death.wav will play.         //
+// ▪ If Vital Signs Critical or User Death Imminent plays, there is a  //
+//   configurable % chance (50% default) the suit will append          //
+//   Seek Medical Attention after the initial alert.                   //
+// ▪ When Health is 0, death.wav will play.                            //
 //                                                                     //
 //-------------------------- Armor Alerts -----------------------------//
 //                                                                     //
 // ▪ When Clash damage ≥ 30:                                           //
 //     - armor_alarm.wav will play. (HEV UI SOUNDS)                    //
 // ▪ If Armor reaches 0:                                               //
-//     - 50% chance to play armor_compromised.wav. (HEV VOICE LINE)    //
+//     - Configurable chance to play armor_compromised.wav             //
+//       (HEV VOICE LINE). 100% default.                               //
 //                                                                     //
 //--------------------- Physical Clash System -------------------------//
 //                                                                     //
 // ▪ Each Clash deals between 1–50 damage based on impact strength.    //
-// ▪ 8 (ENVIRONMENTAL FX) Clash sounds available (clsh**.wav):         //
-//     → Divided by Clash Impact and Injury type.                      //
-// ▪ Impact categorised by damage value:                               //
-//     - < 25: Minor Clash sounds                                      //
-//     - ≥ 25: Major Clash sounds                                      //
-// ▪ Injury subcategories for both Impact types:                       //
+// ▪ 16 (ENVIRONMENTAL FX) Clash sfx set up as sub-sub sounds:         //
+//     → https://pod.hubbe.net/sound/sub-sub-sounds.html               //
+// ▪ *Impacts* are divided into 2 categories depending on Clash damage://
+//     - < 25: Minor Clash                                             //
+//     - ≥ 25: Major Clash                                             //
+// ▪ Minor/Major are sub-divided randomly into an *Injury*:            //
 //     - Lacerations                                                   //
 //     - Fractures                                                     //
-//                                                                     //
-//-------------------- Clash Sound Index Table ------------------------//
-//                                                                     //
-// ▪ Minor Clash sounds:                                               //
-//     - clsh00.wav  → Laceration (Low)                                //
-//     - clsh01.wav  → Laceration (Med)                                //
-//     - clsh02.wav  → Laceration (High)                               //
-//     - clsh03.wav  → Fracture (Minor)                                //
-// ▪ Major Clash sounds:                                               //
-//     - clsh04.wav  → Laceration (Low)                                //
-//     - clsh05.wav  → Laceration (Med)                                //
-//     - clsh06.wav  → Laceration (High)                               //
-//     - clsh07.wav  → Fracture (Major)                                //
-//                                                                     //
-//------------------- Clash Detected Voice Line -----------------------//
-//                                                                     //
-// ▪ 44% chance to trigger Clash Detected wav (HEV VOICE LINE):        //
-//     → minor_laceration.wav (Minor Laceration)                       //
-//     → minor_fracture.wav (Minor Fracture)                           //
-//     → major_laceration.wav (Major Laceration)                       //
-//     → major_fracture.wav (Major Fracture)                           //
-//       - e.g. ”Major Fracture Detected!"                             //
+//   E.g. clsh/NNN/0.wav would be Lacerations, and clsh/NNN/1.wav      //
+//   would be Fractures. The NNN would be determined by the strength   //
+//   and 0/1 would be selected randomly.                               //
 //                                                                     //
 //-------------------- Morphine Auto-Injection ------------------------//
 //                                                                     //
-// ▪ Only if major_laceration or major_fracture (HEV VOICE LINE) plays://
+// ▪ Only if major_laceration.wav or                                   //
+//   major_fracture.wav (HEV VOICE LINE) plays:                        //
 //     → 40% chance to follow-up with another (HEV VOICE LINE):        //
 //       → morphine.wav                                                //
-//         - This line will be on a cooldown, so as not to be spammed. //
+//         - This line will be on a cooldown, to avoid overdosing.     //
 //                                                                     //
 //------------------------ Hazard System ------------------------------//
 //                                                                     //
@@ -226,14 +174,13 @@
 //   their damage lingers over time.                                   //
 //     - These 4 Hazards have a 50% chance to let the user know        //
 //       that damage is lingering via a (HEV VOICE LINE).              //
-//     - This has been configured directly in the sound font files.    //
 // ▪ Heat and Shock do not have lingering damage and should be         //
 //   cleared immediately by the user by clicking AUX.                  //
 //                                                                     //
 //----------------- Quick Healing & Recharging ------------------------//
 //                                                                     //
-// ▪ Two recovery options are available, which replicate the small     //
-//   health and armor pickups in-game, the Medkits and Batteries.      //
+// ▪ Two quick recovery options are available, which replicate the     //
+//   small Medkit and Battery pickups in-game.                         //
 //     - Medkit  → Immediately recovers 15 Health.                     //
 //     - Battery → Immediately recovers 15 Armor.                      //
 // ▪ Both have their own distinct (HEV UI SOUNDS):                     //
