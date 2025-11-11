@@ -40,15 +40,15 @@
 //                                                                     //
 // - armor**.wav             - Armor Readouts                          //
 // - health**.wav            - Health Alerts                           //
-// - armor_compromised.wav   - Plays when armor drops to 0             //
-// - boot.wav                - HEV welcome message (shortened)         //
-// - boot_long.wav           - HEV welcome message (original)          //
+// - armor_compromised**.wav - Plays when armor drops to 0             //
+// - boot01.wav              - HEV welcome message (shortened)         //
+// - boot02.wav              - HEV welcome message (original)          //
 // - hazard**.wav            - Hazard Alerts                           //
-// - morphine.wav            - Plays after a Major Clash               //
-// - minor_laceration.wav    - Plays minor lacerations detected quote  //
-// - minor_fracture.wav      - Plays minor fracture detected quote     //
-// - major_laceration.wav    - Plays major lacerations detected quote  //
-// - major_fracture.wav      - Plays major fracture detected quote     //
+// - minor_laceration.wav    - Plays Minor Lacerations Detected quote  //
+// - minor_fracture.wav      - Plays Minor Fracture Detected quote     //
+// - major_laceration.wav    - Plays Major Lacerations Detected quote  //
+// - major_fracture.wav      - Plays Major Fracture Detected quote     //
+// - morphine.wav            - Plays after a Major Detected quote      //
 //                                                                     //
 //------------------------ HEV UI SOUNDS ------------------------------//
 //                                                                     //
@@ -90,9 +90,9 @@
 //                                                                     //
 // ▪ If we have 8 levels of severity, we will need 16 various          //
 //   Clash sfx (ENVIRONMENTAL SFX).                                    //
-//   This is because Clashes create 2 types of injuries, Lacerations   //
-//   and Fractures. So we should have 8 Laceration sounds and 8        //
-//   Fracture sounds.                                                  //
+//   This is because Clashes have 2 types of *injuries*, Lacerations   //
+//   and Fractures. So we should have 8 Laceration sfx and 8           //
+//   Fracture sfx.                                                     //
 //                                                                     //
 // ▪ Create the clsh/ folder in the root of the sound font.            //
 // ▪ Inside clsh/, create the following sub-folders:                   //
