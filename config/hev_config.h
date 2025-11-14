@@ -2,14 +2,16 @@
 #include "proffieboard_v2_config.h"
 #define NUM_BLADES 6
 #define NUM_BUTTONS 2
-#define VOLUME 50
+#define VOLUME 1500
+#define BOOT_VOLUME 150
+#define SAVE_VOLUME
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 3.0
 //If not disabled, Armor Readout play back floats around current Armor value.
 #define DISABLE_NO_REPEAT_RANDOM
 #define IDLE_OFF_TIME 9999999
-#define HEV_RANDOM_EVENT_INTERVAL_MS 10000
-#define HEV_RANDOM_HAZARD_CHANCE 95
+// #define HEV_RANDOM_EVENT_INTERVAL_MS 10000
+// #define HEV_RANDOM_HAZARD_CHANCE 95
 #define HEV_HEALTH_ANNOUNCEMENT_CHANCE 100  // defaults to 50%
 // #define LIGHTS_ON_RESETS_HEALTH_ARMOR  // if not defined, resumes levels where you left off
 #define MOUNT_SD_SETTING
@@ -25,6 +27,9 @@ const unsigned int maxLedsPerStrip = 144;
 // The music tracks can be found in the "media" dir in the root folder.
 
 #ifdef CONFIG_PRESETS
+
+using OnDemandVolumeLevel = TransitionEffectL<TrConcat<TrSmoothFade<200>,AlphaL<Gradient<Blue,Green>,SmoothStep<VolumeLevel,Int<-1>>>,TrDelay<1000>,TrSmoothFade<500>>,EFFECT_VOLUME_LEVEL>;
+
 Preset armor[] = {
 
 { "hev;HEVcommon", "HEVcommon/tracks/hl1_ost/10 Valve Theme [Extended].wav",
@@ -69,7 +74,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 
 // Left shoulder (inner LED =1)
@@ -114,7 +120,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 
 // Left back (bottom = LED 1)
@@ -159,7 +166,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 
 // Right back (bottom = LED 1)
@@ -204,7 +212,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 
 // Right shoulder (inner LED =1)
@@ -249,7 +258,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 
 // Right front (inner LED =1)
@@ -294,7 +304,8 @@ StylePtr<Layers<
     Black,AlphaL<White,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Layers<
     Black,AlphaL<Orange,LinearSectionF<Int<5400>,Int<10900>>>>,TrDelay<50>,Black,TrDelay<100>,White,TrFade<500>,Orange,TrFade<500>>,TrInstant,SaberBase::LOCKUP_LIGHTNING_BLOCK>,
   TransitionEffectL<TrConcat<TrInstant,Strobe<Black,Orange,15,20>,TrDelay<200>,DeepSkyBlue,TrFade<500>,Black,TrInstant>,EFFECT_LB_END>,
-  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>
+  InOutTrL<TrConcat<TrInstant,White,TrDelay<800>,TrSmoothFade<1200>>,TrInstant>,
+  OnDemandVolumeLevel
 >>(),
 "hev"
 },

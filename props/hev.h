@@ -354,6 +354,14 @@ EFFECT(medkit);
 // ENVIRONMENTAL EFFECTS
 EFFECT(stun);
 
+// VOLUME MENU
+EFFECT(vmbegin);
+EFFECT(vmend);
+EFFECT(volup);
+EFFECT(voldown);
+EFFECT(volmax);
+EFFECT(volmin);
+
 struct HEVTimerBase {
   uint32_t start_ = 0;
 
@@ -676,6 +684,79 @@ public:
     PVLOG_NORMAL << "Armor: " << armor_ << "\n";
   }
 
+// Volume Menu
+  void VolumeMenu() {
+    // if (combat_mode_) return;
+    mode_volume_ = !mode_volume_;
+    if (mode_volume_) {
+      if (SFX_vmbegin) {
+        sound_library_.SayEnterVolumeMenu();
+      } else {
+        beeper.Beep(0.1, 1000);
+        beeper.Beep(0.1, 2000);
+        beeper.Beep(0.1, 3000);
+      }
+      PVLOG_NORMAL << "** Enter Volume Menu\n";
+      SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    } else {
+      if (SFX_vmend) {
+        sound_library_.SayVolumeMenuEnd();
+      } else {
+        beeper.Beep(0.1, 2000);
+        beeper.Beep(0.1, 1000);
+      }
+      PVLOG_NORMAL << "** Exit Volume Menu\n";
+    }
+  }
+
+  const int maxVolume = VOLUME;
+  const int minVolume = VOLUME * 0.10;
+  int currentVolume = dynamic_mixer.get_volume();
+
+  void VolumeUp() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    int increasedVolume = std::min<int>(maxVolume, currentVolume + maxVolume * 0.10);
+
+    if (currentVolume < maxVolume) {
+      currentVolume = increasedVolume;
+      dynamic_mixer.set_volume(currentVolume);
+      if (!hybrid_font.PlayPolyphonic(&SFX_volup)) {
+        beeper.Beep(0.10, 2000);
+        beeper.Beep(0.20, 2500);
+      }
+      PVLOG_NORMAL << "** Volume Up - Current Volume: " << currentVolume << "\n";
+    } else {
+      currentVolume = maxVolume;
+      dynamic_mixer.set_volume(currentVolume);
+      if (!hybrid_font.PlayPolyphonic(&SFX_volmax)) {
+        beeper.Beep(0.5, 3000);
+      }
+      PVLOG_NORMAL << "** Maximum Volume\n";
+    }
+  }
+
+  void VolumeDown() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    int decreasedVolume = std::max<int>(minVolume, currentVolume - maxVolume * 0.10);
+
+    if (currentVolume > minVolume) {
+      currentVolume = decreasedVolume;
+      dynamic_mixer.set_volume(currentVolume);
+      if (!hybrid_font.PlayPolyphonic(&SFX_voldown)) {
+        beeper.Beep(0.10, 2000);
+        beeper.Beep(0.20, 1500);
+      }
+      PVLOG_NORMAL << "** Volume Down - Current Volume: " << currentVolume << "\n";
+    } else {
+      currentVolume = minVolume;
+      dynamic_mixer.set_volume(currentVolume);
+      if (!hybrid_font.PlayPolyphonic(&SFX_volmin)) {
+        beeper.Beep(0.5, 1000);
+      }
+      PVLOG_NORMAL << "** Minimum Volume\n";
+    }
+  }
+
   // Main Loop
   void Loop() override {
     CheckRandomEvent();
@@ -705,7 +786,7 @@ public:
         Off();
         return true;
 
-      // short-click AUX to clear hazard
+      // short-click AUX to clear hazard / Volume Up
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
         if (current_hazard_) {
@@ -714,8 +795,16 @@ public:
           timer_random_event_.reset();
           timer_random_event_.start();
           return true;
+        } else if (mode_volume_) {
+            VolumeUp();
         }
         // Play a no-hazard sound ?
+        return true;
+
+      // short-click POW to Volume Down
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
+        if (mode_volume_) VolumeDown();
         return true;
 
       // Double-click power to start/stop track.
@@ -782,6 +871,14 @@ public:
           return true;
         }
         break;
+
+        // Enter/Exit Volume Menu
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+        VolumeMenu();
+        return true;
+
+
 
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
@@ -876,6 +973,10 @@ public:
         return;
     }
   }
+
+private:
+  bool mode_volume_ = false;
+
 };
 
 #endif
