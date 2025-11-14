@@ -303,6 +303,16 @@
 //      - Time (ms) between each armor recharge tick (hold POWER).     //
 //        Default from 0 - 100 Armor is 10 seconds.                    //
 //        Lower = faster recharge.                                     //
+//                                                                     //
+//  HEV_COOLDOWN_HEALTH_ALERT_MS                                       //
+//  HEV_COOLDOWN_HAZARD_ALERT_MS                                       //
+//  HEV_COOLDOWN_MINOR_LACERATION_MS                                   //
+//  HEV_COOLDOWN_MINOR_FRACTURE_MS                                     //
+//  HEV_COOLDOWN_MAJOR_LACERATION_MS                                   //
+//  HEV_COOLDOWN_MAJOR_FRACTURE_MS                                     //
+//  HEV_COOLDOWN_MORPHINE_MS                                           //
+//      - Cooldown (ms) for specified voice lines. Can be customized   //
+//        per voice line to your liking. Prevents spam.                //
 //=====================================================================//
 
 #ifndef HEV_RANDOM_EVENT_INTERVAL_MS
@@ -325,6 +335,27 @@
 #endif
 #ifndef HEV_ARMOR_INCREASE_MS
 #define HEV_ARMOR_INCREASE_MS 100
+#endif
+#ifndef HEV_COOLDOWN_HEALTH_ALERT_MS
+#define HEV_COOLDOWN_HEALTH_ALERT_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_HAZARD_ALERT_MS
+#define HEV_COOLDOWN_HAZARD_ALERT_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MINOR_LACERATION_MS
+#define HEV_COOLDOWN_MINOR_LACERATION_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MINOR_FRACTURE_MS
+#define HEV_COOLDOWN_MINOR_FRACTURE_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MAJOR_LACERATION_MS
+#define HEV_COOLDOWN_MAJOR_LACERATION_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MAJOR_FRACTURE_MS
+#define HEV_COOLDOWN_MAJOR_FRACTURE_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MORPHINE_MS
+#define HEV_COOLDOWN_MORPHINE_MS 300000
 #endif
 
 #include "prop_base.h"
@@ -393,6 +424,13 @@ public:
   //                                Controls healing rate.               //
   // - timer_armor_increase_      - Interval for Armor recharge.         //
   //                                Controls Armor recharge rate.        //
+  // - timer_cooldown_heatlh_alert_                                      //
+  // - timer_cooldown_hazard_alert_                                      //
+  // - timer_cooldown_minor_laceration_                                  //
+  // - timer_cooldown_minor_fracture_                                    //
+  // - timer_cooldown_major_laceration_                                  //
+  // - timer_cooldown_major_fracture_                                    //
+  // - timer_cooldown_morphine_   - Cooldown timers for certain quotes.  //
   //=====================================================================//
 
   HEVTimerBase timer_clash_;
@@ -401,6 +439,14 @@ public:
   HEVTimerBase timer_hazard_after_revive_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
+  HEVTimerBase timer_cooldown_health_alert_;
+  HEVTimerBase timer_cooldown_hazard_alert_;
+  HEVTimerBase timer_cooldown_minor_laceration_;
+  HEVTimerBase timer_cooldown_minor_fracture_;
+  HEVTimerBase timer_cooldown_major_laceration_;
+  HEVTimerBase timer_cooldown_major_fracture_;
+  HEVTimerBase timer_cooldown_morphine_;
+
 
   Hev() : PropBase() {
     timer_clash_.configure(this->clash_timeout_);
@@ -409,6 +455,13 @@ public:
     timer_hazard_after_revive_.configure(HEV_HAZARD_AFTER_REVIVE_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
+    timer_cooldown_health_alert_.configure(HEV_COOLDOWN_HEALTH_ALERT_MS);
+    timer_cooldown_hazard_alert_.configure(HEV_COOLDOWN_HAZARD_ALERT_MS);
+    timer_cooldown_minor_laceration_.configure(HEV_COOLDOWN_MINOR_LACERATION_MS);
+    timer_cooldown_minor_fracture_.configure(HEV_COOLDOWN_MINOR_FRACTURE_MS);
+    timer_cooldown_major_laceration_.configure(HEV_COOLDOWN_MAJOR_LACERATION_MS);
+    timer_cooldown_major_fracture_.configure(HEV_COOLDOWN_MAJOR_FRACTURE_MS);
+    timer_cooldown_morphine_.configure(HEV_COOLDOWN_MORPHINE_MS);
   }
 
   const char* name() override { return "Hev"; }
@@ -767,9 +820,9 @@ public:
 
    // Hev effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
-    // Don't queue new sounds if dead (except death sound).
-    // Once dead, if a queued sound is currently playing, allow it to finish
-    // alongside death sound. However all pending sounds should be cleared.
+    // Don't queue new sounds if dead. Once dead, if a queued sound is
+    // currently playing, allow it to finish alongside Death Sound.
+    // However all pending sounds should be cleared.
     switch (effect) {
       default: return;
 
@@ -785,9 +838,17 @@ public:
     
       // (HEV VOICE LINE) Health Alert
       case EFFECT_USER1:
-        if (health_ == 0) return; // Don't queue health sounds if dead
-        SFX_health.SelectFloat(health_ / 100.0);
-        SOUNDQ->Play(&SFX_health);
+         // Don't queue Health Alerts if dead.
+        if (health_ == 0) return;
+         // Only play if cooldown finished.
+        if (timer_cooldown_health_alert_.check()) {
+          SFX_health.SelectFloat(health_ / 100.0);
+          SOUNDQ->Play(&SFX_health);
+          timer_cooldown_health_alert_.start();
+          PVLOG_NORMAL << "PLAYING Health Alert. Cooldown started.\n";
+        } else {
+          PVLOG_NORMAL << "BLOCKED Health Alert by cooldown.\n";
+        }
         return;
     
       // (HEV UI SOUNDS) Death Sound
