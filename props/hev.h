@@ -250,6 +250,17 @@
 //   - endlb.wav plays if already at max Armor.                        //
 //   - Plays Armor Readout function, but rounds the value to           //
 //     the nearest multiple of 5.                                      //
+//                                                                     //
+//----------------------- Voice Line Cooldowns ------------------------//
+//                                                                     //
+// ▪ Some (HEV VOICE LINES) have configurable cooldowns to prevent     //
+//   them from being spammed.                                          //
+// ▪ Default cooldown times are defined here, but can be customized in //
+//   hev_config.h per voice line to your liking.                       //
+// ▪ It is worth noting that cooldowns are work together with          //
+//   a definable *chance* to trigger said voice lines.                 //
+//   This means that even if a voice line is off cooldown, it may not  //
+//   always play. This creates variability in the suit's responses.    //
 //=====================================================================//
 
 #ifndef PROPS_HEV_H
