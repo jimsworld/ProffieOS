@@ -2,70 +2,53 @@
 //                        H A L F - L I F E                            //
 //                      ─────────────────────                          //
 //              Hazardous Environment Suit Diagnostics                 //
-//                H.E.V. Mk V - Configuration Protocol                 //
+//              H.E.V. Mark V - Configuration Protocol                 //
 //---------------------------------------------------------------------//
 //                      PROPERTY OF BLACK MESA                         //
 //---------------------------------------------------------------------//
-//               Created by James Nash with fundamental                //
-//          support and contributions of Fredrik Hubinette             //
+//                      Created by James Nash,                         //
+//           with fundamental support and contributions from           //
+//                 Fredrik Hubinette & Brian Conner                    //
 //=====================================================================//
 
 //=====================================================================//
 //                    H.E.V. SUIT - USAGE GUIDE                        //
 //                    ─────────────────────────                        //
-// --2 BUTTON SETUP--                                                  //
+// **2 BUTTON SETUP**                                                  //
 //                                                                     //
-// - POWER Button:                                                     //
+// ▪ PWR Button:                                                       //
 //     - Long-click           - ON/OFF                                 //
 //     - Hold                 - Recharge Armor                         //
 //     - Double-click         - Toggle track                           //
 //     - Triple-click         - Next preset                            //
-// - AUX Button:                                                       //
+// ▪ AUX Button:                                                       //
 //     - Hold                 - Recharge Health                        //
 //     - Single-click         - Deactivate Hazard                      //
 //     - Double-click         - Armor Readout                          //
 //     - Triple-click         - Previous preset                        //
-//                                                                     //
-//---------------------------------------------------------------------//
-//              PHYSICAL DAMAGE & HAZARD DAMAGE LOGIC                  //
-//---------------------------------------------------------------------//
-//                                                                     //
-// - The HEV suit has two main resources: Health and Armor.            //
-//     - Both have a maximum value of 100.                             //
-//     - Both active only while the suit is ON.                        //
-// - Random Hazards:                                                   //
-//     - Active only while the suit is ON.                             //
-//     - Always damages Armor first, then Health.                      //
-//     - Triggered at intervals with a chance-based system.            //
-// - When Armor is depleted:                                           //
-//     - Hazards begin directly damaging Health.                       //
-//     - Clashes deal full damage to Health.                           //
-// - When Armor is active:                                             //
-//     - Clashes (physical impacts) are negated:                       //
-//         ▪ 80% is divided in half, then applied to Armor.            //
-//         ▪ 20% is applied to Health.                                 //
-// - Clash damage is based on force of impact:                         //
-//     - Cannot exceed 50 total damage.                                //
-//                                                                     //
 //=====================================================================//
 
 //=====================================================================//
 //                     AUDIO SYSTEM CATEGORIES                         //
 //                    ─────────────────────────                        //
 //                                                                     //
+// All HALF-LIFE audio files can be found in the game's "sound" folder.//
+// Specifically, HEV voice lines can be found within "fvox" folder.    //
+// The music tracks can be found in the "media" folder in the root dir.//
+//                                                                     //
 //----------------------  HEV VOICE LINES -----------------------------//
 //                                                                     //
 // - armor**.wav             - Armor Readouts                          //
 // - health**.wav            - Health Alerts                           //
-// - armor_compromised.wav   - Plays when armor drops to 0             //
-// - boot.wav                - HEV welcome message (shortened)         //
-// - boot_long.wav           - HEV welcome message (original)          //
+// - armor_compromised**.wav - Plays when armor drops to 0             //
+// - boot01.wav              - HEV welcome message (shortened)         //
+// - boot02.wav              - HEV welcome message (original)          //
 // - hazard**.wav            - Hazard Alerts                           //
-// - morphine.wav            - Plays after a Major Clash               //
-// - minor_laceration.wav    - Plays minor lacerations detected quote  //
-// - minor_fracture.wav      - Plays minor fractures detected quote    //
-// - major_laceration.wav    - Plays major lacerations detected quote  //
-// - major_fracture.wav      - Plays major fractures detected quote    //
+// - minor_laceration.wav    - Plays Minor Lacerations Detected quote  //
+// - minor_fracture.wav      - Plays Minor Fracture Detected quote     //
+// - major_laceration.wav    - Plays Major Lacerations Detected quote  //
+// - major_fracture.wav      - Plays Major Fracture Detected quote     //
+// - morphine.wav            - Plays after a Major Detected quote      //
 //                                                                     //
 //------------------------ HEV UI SOUNDS ------------------------------//
 //                                                                     //
@@ -78,14 +61,14 @@
 // - endlock.wav             - End health charge                       //
 // - font.wav                - Weapon select SFX (placeholder)         //
 // - fuzz**.wav              - Subtle alert // precedes armor**.wav    //
-// - in.wav                  - Torch ON                                //
+// - in.wav                  - Torch OFF                               //
 // - lb.wav                  - Looping armor charge                    //
 // - lock.wav                - Looping health charge                   //
 // - medkit.wav              - Medkit SFX // health pickup             //
-// - out.wav                 - Torch OFF                               //
+// - out.wav                 - Torch ON                                //
 // - armor00.wav             - No Armor SFX // Armor = 0               //
 //                                                                     //
-//-------------------- ENVIRONMENTAL EFFECTS --------------------------//
+//---------------------- ENVIRONMENTAL SFX ----------------------------//
 //                                                                     //
 // - stun**.wav              - Hazard SFX // alt001–alt006 = hazards   //
 // - clsh**.wav              - Physical impacts, slashes, collisions   //
@@ -94,170 +77,179 @@
 //                                                                     //
 // - blank.wav               - Placeholder inside altchng/ folder      //
 //                                                                     //
+//---------------------- Clash Sounds Setup ---------------------------//
+//                                                                     //
+// ▪ When we use Clashes for the HEV Suit, the suit may offer audible  //
+//   feedback based on the type of Clash recieved and might apply      //
+//   medical assistance.                                               //
+// ▪ This is explained further in the section below;                   //
+//   SYSTEM & VOICE BREAKDOWN                                          //
+//                                                                     //
+// ▪ Clash sfx (ENVIRONMENTAL SFX) must be set up as sub-sub sounds:   //
+//   - https://pod.hubbe.net/sound/sub-sub-sounds.html                 //
+//                                                                     //
+// ▪ If we have 8 levels of severity, we will need 16 various          //
+//   Clash sfx (ENVIRONMENTAL SFX).                                    //
+//   This is because Clashes have 2 types of *injuries*, Lacerations   //
+//   and Fractures. So we should have 8 Laceration sfx and 8           //
+//   Fracture sfx.                                                     //
+//                                                                     //
+// ▪ Create the clsh/ folder in the root of the sound font.            //
+// ▪ Inside clsh/, create the following sub-folders:                   //
+//   ├── 000/     - Lowest severity                                    //
+//   ├── 001/                                                          //
+//   ├── 002/                                                          //
+//   ├── 003/                                                          //
+//   ├── 004/                                                          //
+//   ├── 005/                                                          //
+//   ├── 006/                                                          //
+//   └── 007/     - Highest severity                                   //
+//                                                                     //
+// ▪ Each NNN/ folder, must contain:                                   //
+//   ├── 000.wav                                                       //
+//   └── 001.wav                                                       //
+//     - 000.wav would be a "Laceration" sound, and 001.wav would be   //
+//       a "Fracture" sound.                                           //
+//     - The NNN would be determined by the strength and 000/001 would //
+//       be selected randomly.                                         //
+//                                                                     //
 //------------------ Random Hazard Sounds Setup -----------------------//
 //                                                                     //
-// ▪ Create 7 directories in root of sound font: alt00 through alt06   //
+// ▪ Random Hazards are explained in the section below;                //
+//   SYSTEM & VOICE BREAKDOWN                                          //
+//                                                                     //
+// ▪ Since there are 6 Random Hazards, the following must be set up in //
+//   the sound font:                                                   //
+//                                                                     //
+// ▪ Create 7 alt**/ folders in the root of the sound font:            //
+//   ├── alt00/     - None                                             //
+//   ├── alt01/     - Biohazard                                        //
+//   ├── alt02/     - Radiation                                        //
+//   ├── alt03/     - Blood Toxins                                     //
+//   ├── alt04/     - Chemical                                         //
+//   ├── alt05/     - Heat                                             //
+//   └── alt06/     - Shock                                            //
 // ▪ Each alt**/ folder must contain:                                  //
-//    ├── hazard00.wav                                                 //
-//    └── hazard01.wav                                                 //
-//      → These are the Hazard Alert (HEV VOICE LINES) for that folder.//
+//   ├── hazard00.wav                                                  //
+//   └── hazard01.wav                                                  //
+//     - These are the Hazard Alerts (HEV VOICE LINES) for that folder.//
 //                                                                     //
 // ▪ Inside each alt**/ folder, create an altchng/ folder:             //
-// ▪ Inside each altchng/ folder:                                      //
-//    - Include one file: blank.wav                                    //
-//      → A silent placeholder used to satisfy the folder structure.   //
+// ▪ Each altchng/ folder must contain:                                //
+//   └── blank.wav                                                     //
+//     - A silent placeholder to satisfy the altchng structure.        //
+//                                                                     //
 // ▪ Inside each alt**/ folder, create a stun/ folder:                 //
-// ▪ Inside each stun/ folder:                                         //
-//    - Include the (ENVIRONMENTAL FX) that match                      //
-//      the Hazard type (e.g., spark, burn, Geiger counter)            //
+// ▪ Each stun/ folder must contain:                                   //
+//   └── stun**.wav                                                    //
+//     - These are the (ENVIRONMENTAL SFX) that should match the Hazard//
+//       (e.g. spark, burn, Geiger counter).                           //
+//     - Include as many different variations as you'd like.           //
 //                                                                     //
 // ▪ All alt**/ folders (alt00–alt06) must have the **same number** of //
 //    WAVs inside including **all** sub folders.                       //
-//                                                                     //
 //=====================================================================//
 
 //=====================================================================//
-//                        BEHAVIOR BREAKDOWN                           //
+//                     SYSTEM & VOICE BREAKDOWN                        //
 //                    ─────────────────────────                        //
 //                                                                     //
-//------------------------- Health Alerts -----------------------------//
+//------------------------- Health & Armor ----------------------------//
 //                                                                     //
-// ▪ When Health drops to a lower 10th decimal (e.g., from 43 → 36),   //
-//   a Health Alert (health**.wav) will play, (HEV VOICE LINE).        //
+// ▪ The HEV suit has two main resources: Health & Armor.              //
+//   - Both have a maximum value of 100.                               //
+//   - Active only while the suit is ON.                               //
 //                                                                     //
-// ▪ The suit will say state different Health Alerts, depending on     //
-//   what health dropped down to. Below are the health thresholds:     //
+//------------------------- Armor Alarm -------------------------------//
 //                                                                     //
-//   - ≤ 10: "User Death Imminent"    - Range: health01 - health10     //
-//   - ≤ 30: "Vital Signs Critical"   - Range: health11 - health30     //
-//   - ≤ 50: "Seek Medical Attention" - Range: health31 - health50     //
+// ▪ If Armor reaches 0:                                               //
+//   - Configurable chance to play armor_compromised.wav               //
+//     (HEV VOICE LINE). 100% default.                                 //
 //                                                                     //
-// ▪ Not all wavs have audio, therefore some wavs are blank, which     //
-//   creates an **element of chance** for Health Alerts to play.       //
-//   This has been configured directly in the health folder in the     //
-//   sound font.                                                       //
-//                                                                     //
-// ▪ The following table shows which health** files in the font        //
-//   have actual voice lines (✓ = has audio, blank = no audio).       //
-//
-//   1–10: "User Death Imminent"
-//   health01  ✓    health06  ✓
-//   health02  ✓    health07
-//   health03  ✓    health08  ✓
-//   health04  ✓    health09  ✓
-//   health05  ✓    health10
-//
-//   11–30: "Vital Signs Critical"
-//   health11  ✓    health18  ✓    health25
-//   health12  ✓    health19       health26  ✓
-//   health13       health20  ✓    health27  ✓
-//   health14  ✓    health21  ✓    health28
-//   health15  ✓    health22       health29  ✓
-//   health16       health23  ✓    health30  ✓
-//   health17  ✓    health24
-//
-//   31–50: "Seek Medical Attention"
-//   health31       health38  ✓    health45
-//   health32  ✓    health39       health46  ✓
-//   health33       health40  ✓    health47
-//   health34  ✓    health41       health48  ✓
-//   health35       health42  ✓    health49
-//   health36  ✓    health43       health50  ✓
-//   health37       health44  ✓
-//
-// ▪ There are no Health Alerts when Health is above 50. So,           //
-//   health51 - health100 are blank.                                   //
-//                                                                     //
-// ▪ health00 is blank. When Health is 0, death.wav will play.         //
-//                                                                     //
-//-------------------------- Armor Alerts -----------------------------//
+//------------------------- Armor Alerts ------------------------------//
 //                                                                     //
 // ▪ When Clash damage ≥ 30:                                           //
-//     - armor_alarm.wav will play. (HEV UI SOUNDS)                    //
-// ▪ If Armor reaches 0:                                               //
-//     - 50% chance to play armor_compromised.wav. (HEV VOICE LINE)    //
+//   - armor_alarm.wav will play. (HEV UI SOUNDS)                      //
 //                                                                     //
-//--------------------- Physical Clash System -------------------------//
-//                                                                     //
-// ▪ Each Clash deals between 1–50 damage based on impact strength.    //
-// ▪ 8 (ENVIRONMENTAL FX) Clash sounds available (clsh**.wav):         //
-//     → Divided by Clash Impact and Injury type.                      //
-// ▪ Impact categorised by damage value:                               //
-//     - < 25: Minor Clash sounds                                      //
-//     - ≥ 25: Major Clash sounds                                      //
-// ▪ Injury subcategories for both Impact types:                       //
-//     - Lacerations                                                   //
-//     - Fractures                                                     //
-//                                                                     //
-//-------------------- Clash Sound Index Table ------------------------//
-//                                                                     //
-// ▪ Minor Clash sounds:                                               //
-//     - clsh00.wav  → Laceration (Low)                                //
-//     - clsh01.wav  → Laceration (Med)                                //
-//     - clsh02.wav  → Laceration (High)                               //
-//     - clsh03.wav  → Fracture (Minor)                                //
-// ▪ Major Clash sounds:                                               //
-//     - clsh04.wav  → Laceration (Low)                                //
-//     - clsh05.wav  → Laceration (Med)                                //
-//     - clsh06.wav  → Laceration (High)                               //
-//     - clsh07.wav  → Fracture (Major)                                //
-//                                                                     //
-//------------------- Clash Detected Voice Line -----------------------//
-//                                                                     //
-// ▪ 44% chance to trigger Clash Detected wav (HEV VOICE LINE):        //
-//     → minor_laceration.wav (Minor Laceration)                       //
-//     → minor_fracture.wav (Minor Fracture)                           //
-//     → major_laceration.wav (Major Laceration)                       //
-//     → major_fracture.wav (Major Fracture)                           //
-//       - e.g. ”Major Fracture Detected!"                             //
-//                                                                     //
-//-------------------- Morphine Auto-Injection ------------------------//
-//                                                                     //
-// ▪ Only if major_laceration or major_fracture (HEV VOICE LINE) plays://
-//     → 40% chance to follow-up with another (HEV VOICE LINE):        //
-//       → morphine.wav                                                //
-//         - This line will be on a cooldown, so as not to be spammed. //
-//                                                                     //
-//------------------------ Hazard System ------------------------------//
-//                                                                     //
-// ▪ When triggered, randomly selects one of 6 Hazards:                //
-//     → Heat, Shock, Bio, Blood Toxins, Chemical, Radiation.          //
-// ▪ If Bio, Blood Toxins, Chem, or Radiation triggered,               //
-//   their damage lingers over time.                                   //
-//     - These 4 Hazards have a 50% chance to let the user know        //
-//       that damage is lingering via a (HEV VOICE LINE).              //
-//     - This has been configured directly in the sound font files.    //
-// ▪ Heat and Shock do not have lingering damage and should be         //
-//   cleared immediately by the user by clicking AUX.                  //
-//                                                                     //
-//----------------- Quick Healing & Recharging ------------------------//
-//                                                                     //
-// ▪ Two recovery options are available, which replicate the small     //
-//   health and armor pickups in-game, the Medkits and Batteries.      //
-//     - Medkit  → Immediately recovers 15 Health.                     //
-//     - Battery → Immediately recovers 15 Armor.                      //
-// ▪ Both have their own distinct (HEV UI SOUNDS):                     //
-//     - Medkit → medkit.wav                                           //
-//     - Battery → battery.wav                                         //
-// ▪ Medkit sound feedback:                                            //
-//     - Plays medkit.wav on trigger.                                  //
-//     - endlock.wav plays if already at max Health.                   //
-// ▪ Battery sound feedback:                                           //
-//     - Plays battery.wav on trigger.                                 //
-//     - endlb.wav plays if already at max Armor.                      //
-//     - Plays Armor Readout function, but rounds the value to         //
-//       the nearest multiple of 5.                                    //
-//                                                                     //
-//----------------------- Armor Readout -------------------------------//
+//------------------------- Armor Readout -----------------------------//
 //                                                                     //
 // ▪ Armor Readout is used to hear the current Armor value.            //
 // ▪ Triggered by double-clicking AUX.                                 //
 // ▪ Activates a sequence of (HEV UI SOUNDS) then (HEV VOICE LINE):    //
-//   → Subtle alert fuzz**.wav → Armor Readout armor**.wav.            //
+//   - Subtle alert fuzz**.wav → Armor Readout armor**.wav.            //
 // ▪ If Armor = 0:                                                     //
-//     - Plays armor00.wav (HEV UI SOUNDS)                             //
-//     - No (HEV VOICE LINE)                                           //
+//   - Plays armor00.wav (HEV UI SOUNDS)                               //
+//   - No (HEV VOICE LINE)                                             //
 //                                                                     //
+//------------------------- Random Hazards ----------------------------//
+//                                                                     //
+// ▪ Always damages Armor first directly, then Health.                 //
+// ▪ Triggers at intervals and also chance-based.                      //
+// ▪ Active only while the suit is ON.                                 //
+// ▪ When triggered, randomly selects 1 of 6 Hazards:                  //
+//   - Biohazard, Radiation, Blood Toxins, Chemical, Heat or Shock.    //
+// ▪ If Biohazard, Radiation, Blood Toxins or Chemical are triggered,  //
+//   periodic damage will linger over time.                            //
+// ▪ Heat and Shock do not have lingering damage and should be         //
+//   cleared immediately by clicking AUX.                              //
+//                                                                     //
+//-------------------------- Clash Damage -----------------------------//
+//                                                                     //
+// ▪ Clash damage is based on force and cannot exceed 50.              //
+//   - Active only while the suit is ON.                               //
+// ▪ When Armor is active, Clash damage is negated:                    //
+//   - 80% is divided in half and applied to Armor.                    //
+//   - 20% is applied to Health.                                       //
+// ▪ When Armor is depleted:                                           //
+//   - Clashes deal full damage to Health.                             //
+//   - Active Hazards begin directly damaging Health.                  //
+//                                                                     //
+//------------------------ Clash Detected -----------------------------//
+//                                                                     //
+// ▪ Depending on Clash damage value, the suit may say the following:  //
+//   - "Minor Laceration/Fracture Detected"    - < 25: Minor Clash     //
+//   - "Major Laceration/Fracture Detected"    - ≥ 25: Major Clash     //
+// ▪ Minor/Major are chosen depending on the sub-sub sound that played.//
+//                                                                     //
+//-------------------- Morphine Auto-Injection ------------------------//
+//                                                                     //
+// ▪ Only if a Major (HEV VOICE LINE) plays:                           //
+//   - 40% chance to follow-up with morphine.wav (HEV VOICE LINE).     //
+//     → Configurable cooldown, to avoid overdosing.                   //
+//                                                                     //
+//------------------------- Health Alerts -----------------------------//
+//                                                                     //
+// ▪ Health Alerts only active when Health is 50 or below.             //
+// ▪ When Health drops to a lower 10th decimal (e.g., from 43 → 36),   //
+//   a Health Alert (health**.wav) will play, (HEV VOICE LINE).        //
+// ▪ The suit may say 1 of 3 Health Alert statements, depending on     //
+//   what Health dropped to:                                           //
+//   - ≤ 10: "User Death Imminent"    - Range: health01 - health10     //
+//   - ≤ 30: "Vital Signs Critical"   - Range: health11 - health30     //
+//   - ≤ 50: "Seek Medical Attention" - Range: health31 - health50     //
+// ▪ If Vital Signs Critical or User Death Imminent plays, there is a  //
+//   configurable % chance (50% default) the suit will append          //
+//   Seek Medical Attention after the initial alert.                   //
+// ▪ When Health is 0, death.wav will play.                            //
+//                                                                     //
+//----------------- Quick Healing & Recharging ------------------------//
+//                                                                     //
+// ▪ Two quick recovery options are available, which replicate the     //
+//   small Medkit and Battery pickups in-game.                         //
+//   - Medkit   → Immediately recovers 15 Health.                      //
+//   - Battery  → Immediately recovers 15 Armor.                       //
+// ▪ Both have their own distinct (HEV UI SOUNDS):                     //
+//   - Medkit   → medkit.wav                                           //
+//   - Battery  → battery.wav                                          //
+//     → Both must be in the root of the sound font.                   //
+// ▪ Medkit sound feedback:                                            //
+//   - Plays medkit.wav on trigger.                                    //
+//   - endlock.wav plays if already at max Health.                     //
+// ▪ Battery sound feedback:                                           //
+//   - Plays battery.wav on trigger.                                   //
+//   - endlb.wav plays if already at max Armor.                        //
+//   - Plays Armor Readout function, but rounds the value to           //
+//     the nearest multiple of 5.                                      //
 //=====================================================================//
 
 #ifndef PROPS_HEV_H
@@ -276,33 +268,53 @@
 //  To fine-tune the behaviour, adjust the values in hev_config.h      //
 //                                                                     //
 //  HEV_RANDOM_EVENT_INTERVAL_MS                                       //
-//      - How often (ms) to check for a Random Hazard.                 //
-//        Higher = less frequent checks.                               //
+//  ▪ How often (ms) to check for a Random Hazard.                     //
+//    Higher = less frequent checks.                                   //
 //                                                                     //
 //  HEV_RANDOM_HAZARD_CHANCE                                           //
-//      - Chance (0–100) for a Random Hazard to occur each check.      //
-//        Higher = more frequent Hazards.                              //
+//  ▪ Chance (0–100) for a Random Hazard to occur each check.          //
+//    Higher = more frequent Hazards.                                  //
 //                                                                     //
 //  HEV_HAZARD_DELAY_MS                                                //
-//      - Delay (ms) before Hazard damage starts after checking and    //
-//        triggering Hazard. Allows time for HEV Voice Line to finish. //
+//  ▪ Delay (ms) before Hazard damage starts after checking and        //
+//    triggering Hazard. Allows time for HEV Voice Line to finish.     //
 //                                                                     //
-//  HEV_HAZARD_DECREASE_MS                                             //
-//      - Time (ms) between each tick of Hazard damage.                //
-//        Lower = faster damage-over-time.                             //
+//  HEV_HAZARD_DECREASE_MIN_MS                                         //
+//  ▪ Minimum time (ms) between each tick of Hazard damage.            //
+//                                                                     //
+//  HEV_HAZARD_DECREASE_MAX_MS                                         //
+//  ▪ Maximum time (ms) between each tick of Hazard damage.            //
+//                                                                     //
+//  HEV_HAZARD_SURGE_MIN_MS                                            //
+//  ▪ Minimum time (ms) for a quick surge of Hazard damage.            //
+//                                                                     //
+//  HEV_HAZARD_SURGE_MAX_MS                                            //
+//  ▪ Maximum time (ms) for a quick surge of Hazard damage.            //
 //                                                                     //
 //  HEV_HAZARD_AFTER_REVIVE_MS                                         //
-//      - Time (ms) after reviving before Hazards can happen again.    //
+//  ▪ Time (ms) after reviving before Hazards can happen again.        //
 //                                                                     //
 //  HEV_HEALTH_INCREASE_MS                                             //
-//      - Time (ms) between each Health recharge tick (hold AUX).      //
-//        Default from 0 - 100 Health is 10 seconds.                   //
-//        Lower = faster healing.                                      //
+//  ▪ Time (ms) between each Health recharge tick (hold AUX).          //
+//    Default from 0 - 100 Health is 10 seconds.                       //
+//    Lower = faster healing.                                          //
 //                                                                     //
 //  HEV_ARMOR_INCREASE_MS                                              //
-//      - Time (ms) between each armor recharge tick (hold POWER).     //
-//        Default from 0 - 100 Armor is 10 seconds.                    //
-//        Lower = faster recharge.                                     //
+//  ▪ Time (ms) between each armor recharge tick (hold POWER).         //
+//    Default from 0 - 100 Armor is 10 seconds.                        //
+//    Lower = faster recharge.                                         //
+//                                                                     //
+//  HEV_COOLDOWN_SEEK_MEDIC_MS                                         //
+//  HEV_COOLDOWN_HEALTH_CRITICAL_MS                                    //
+//  HEV_COOLDOWN_DEATH_IMMINENT_MS                                     //
+//  HEV_COOLDOWN_HAZARD_ALERT_MS                                       //
+//  HEV_COOLDOWN_MINOR_LACERATION_MS                                   //
+//  HEV_COOLDOWN_MINOR_FRACTURE_MS                                     //
+//  HEV_COOLDOWN_MAJOR_LACERATION_MS                                   //
+//  HEV_COOLDOWN_MAJOR_FRACTURE_MS                                     //
+//  HEV_COOLDOWN_MORPHINE_MS                                           //
+//  ▪ Cooldown (ms) for specified voice lines. Can be customized       //
+//    per voice line to your liking. Prevents spam.                    //
 //=====================================================================//
 
 #ifndef HEV_RANDOM_EVENT_INTERVAL_MS
@@ -314,8 +326,17 @@
 #ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
 #endif
-#ifndef HEV_HAZARD_DECREASE_MS
-#define HEV_HAZARD_DECREASE_MS 1000
+#ifndef HEV_HAZARD_DECREASE_MIN_MS
+#define HEV_HAZARD_DECREASE_MIN_MS 1000
+#endif
+#ifndef HEV_HAZARD_DECREASE_MAX_MS
+#define HEV_HAZARD_DECREASE_MAX_MS 4000
+#endif
+#ifndef HEV_HAZARD_SURGE_MIN_MS
+#define HEV_HAZARD_SURGE_MIN_MS 8000
+#endif
+#ifndef HEV_HAZARD_SURGE_MAX_MS
+#define HEV_HAZARD_SURGE_MAX_MS 15000
 #endif
 #ifndef HEV_HAZARD_AFTER_REVIVE_MS
 #define HEV_HAZARD_AFTER_REVIVE_MS 60000
@@ -328,6 +349,33 @@
 #endif
 #ifndef HEV_HEALTH_ANNOUNCEMENT_CHANCE
 #define HEV_HEALTH_ANNOUNCEMENT_CHANCE 50
+#endif
+#ifndef HEV_COOLDOWN_SEEK_MEDIC_MS
+#define HEV_COOLDOWN_SEEK_MEDIC_MS 20000
+#endif
+#ifndef HEV_COOLDOWN_HEALTH_CRITICAL_MS
+#define HEV_COOLDOWN_HEALTH_CRITICAL_MS 20000
+#endif
+#ifndef HEV_COOLDOWN_DEATH_IMMINENT_MS
+#define HEV_COOLDOWN_DEATH_IMMINENT_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_HAZARD_ALERT_MS
+#define HEV_COOLDOWN_HAZARD_ALERT_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MINOR_LACERATION_MS
+#define HEV_COOLDOWN_MINOR_LACERATION_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MINOR_FRACTURE_MS
+#define HEV_COOLDOWN_MINOR_FRACTURE_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MAJOR_LACERATION_MS
+#define HEV_COOLDOWN_MAJOR_LACERATION_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MAJOR_FRACTURE_MS
+#define HEV_COOLDOWN_MAJOR_FRACTURE_MS 10000
+#endif
+#ifndef HEV_COOLDOWN_MORPHINE_MS
+#define HEV_COOLDOWN_MORPHINE_MS 300000
 #endif
 
 #include "prop_base.h"
@@ -351,7 +399,7 @@ EFFECT(death);
 EFFECT(fuzz);
 EFFECT(medkit);
 
-// ENVIRONMENTAL EFFECTS
+// ENVIRONMENTAL SFX
 EFFECT(stun);
 
 // VOLUME MENU
@@ -364,22 +412,19 @@ EFFECT(volmin);
 
 struct HEVTimerBase {
   uint32_t start_ = 0;
-
   uint32_t interval_ = 0;
-
   bool active_ = false;
 
   void reset() { active_ = false; }
-  
   void start() { active_ = true; start_ = millis(); }
-
   void configure(uint32_t interval) { interval_ = interval; }
+  void configure_random(uint32_t min_ms, uint32_t max_ms) {
+    interval_ = min_ms + random(max_ms - min_ms + 1);
+  }
 
-  // Returns true if timer is inactive or timeout exceeded.
   bool check() {
     return !active_ || (millis() - start_ > interval_);
   }
-
   bool running() const {
     return active_ && (millis() - start_) <= interval_;
   }
@@ -392,34 +437,67 @@ public:
   //                       TIMER CONFIGURATION                           //
   //                    ─────────────────────────                        //
   //                                                                     //
-  // - timer_clash_               - Uses clash_timeout from PropBase.    //
+  // ▪ timer_clash_               - Uses clash_timeout from PropBase.    //
   //                                Debounce to prevent false Clashes.   //
-  // - timer_random_event_        - Interval timer for Random Hazards.   //
+  // ▪ timer_random_event_        - Interval timer for Random Hazards.   //
   //                                Controls how often Hazards can occur.//
-  // - timer_hazard_delay_        - Delay inbetween event trigger and    //
-  //                                Hazard dps. Gap for voice to finish. //
-  // - timer_hazard_after_revive_ - Cooldown after user revives.         //
+  // ▪ timer_hazard_delay_        - Delay between event trigger and      //
+  //                                Hazard DPS. Also used as a gap for   //
+  //                                voice to end before stun sfx start.  //
+  // ▪ timer_hazard_surge_        - Duration timer for a quick surge of  //
+  //                                hazardous damage (Heat/Shock).       //
+  // ▪ timer_hazard_after_revive_ - Cooldown after user revives.         //
   //                                Blocks Hazards until timer is done.  //
-  // - timer_health_increase_     - Interval for Health recharge.        //
+  // ▪ timer_health_increase_     - Interval for Health recharge.        //
   //                                Controls healing rate.               //
-  // - timer_armor_increase_      - Interval for Armor recharge.         //
+  // ▪ timer_armor_increase_      - Interval for Armor recharge.         //
   //                                Controls Armor recharge rate.        //
+  // ▪ timer_cooldown_seek_medic_                                        //
+  // ▪ timer_cooldown_health_critical_                                   //
+  // ▪ timer_cooldown_death_imminent_                                    //
+  // ▪ timer_cooldown_hazard_alert_                                      //
+  // ▪ timer_cooldown_minor_laceration_                                  //
+  // ▪ timer_cooldown_minor_fracture_                                    //
+  // ▪ timer_cooldown_major_laceration_                                  //
+  // ▪ timer_cooldown_major_fracture_                                    //
+  // ▪ timer_cooldown_morphine_   - Cooldown timers for certain quotes.  //
   //=====================================================================//
 
   HEVTimerBase timer_clash_;
   HEVTimerBase timer_random_event_;
   HEVTimerBase timer_hazard_delay_;
+  HEVTimerBase timer_hazard_surge_;
   HEVTimerBase timer_hazard_after_revive_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
+  HEVTimerBase timer_cooldown_seek_medic_;
+  HEVTimerBase timer_cooldown_health_critical_;
+  HEVTimerBase timer_cooldown_death_imminent_;
+  HEVTimerBase timer_cooldown_hazard_alert_;
+  HEVTimerBase timer_cooldown_minor_laceration_;
+  HEVTimerBase timer_cooldown_minor_fracture_;
+  HEVTimerBase timer_cooldown_major_laceration_;
+  HEVTimerBase timer_cooldown_major_fracture_;
+  HEVTimerBase timer_cooldown_morphine_;
+
 
   Hev() : PropBase() {
     timer_clash_.configure(this->clash_timeout_);
     timer_random_event_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
     timer_hazard_delay_.configure(HEV_HAZARD_DELAY_MS);
+    timer_hazard_surge_.configure(0);
     timer_hazard_after_revive_.configure(HEV_HAZARD_AFTER_REVIVE_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
+    timer_cooldown_seek_medic_.configure(HEV_COOLDOWN_SEEK_MEDIC_MS);
+    timer_cooldown_health_critical_.configure(HEV_COOLDOWN_HEALTH_CRITICAL_MS);
+    timer_cooldown_death_imminent_.configure(HEV_COOLDOWN_DEATH_IMMINENT_MS);
+    timer_cooldown_hazard_alert_.configure(HEV_COOLDOWN_HAZARD_ALERT_MS);
+    timer_cooldown_minor_laceration_.configure(HEV_COOLDOWN_MINOR_LACERATION_MS);
+    timer_cooldown_minor_fracture_.configure(HEV_COOLDOWN_MINOR_FRACTURE_MS);
+    timer_cooldown_major_laceration_.configure(HEV_COOLDOWN_MAJOR_LACERATION_MS);
+    timer_cooldown_major_fracture_.configure(HEV_COOLDOWN_MAJOR_FRACTURE_MS);
+    timer_cooldown_morphine_.configure(HEV_COOLDOWN_MORPHINE_MS);
   }
 
   const char* name() override { return "Hev"; }
@@ -444,11 +522,12 @@ public:
 
   Hazard current_hazard_ = HAZARD_NONE;
 
-  // Calculate Physical Damage
+  // Calculate Physical and Hazard Damage
   void DoDamage(int damage, bool quiet = false, DamageType type = DAMAGE_PHYSICAL) {
     int previous_health = health_;
     int previous_armor = armor_;
     int tens = health_ / 10;
+    int log_hazard_damage = 0;
 
     // Damage type and calculation
     switch (type) {
@@ -466,11 +545,24 @@ public:
         break;
 
       case DAMAGE_HAZARD:
-        if (armor_ > 0) {
-          armor_ -= damage;
-        } else {
-          health_ -= damage;
+        int hazard_damage = damage;
+        if (damage == 0) {
+          switch (current_hazard_) {
+            case HAZARD_BIO: hazard_damage = 2; break;
+            case HAZARD_RAD: hazard_damage = 3; break;
+            case HAZARD_BLO: hazard_damage = 2; break;
+            case HAZARD_CHE: hazard_damage = 2; break;
+            case HAZARD_HEA: hazard_damage = 4; break;
+            case HAZARD_SHO: hazard_damage = 5; break;
+            default: hazard_damage = 1; break;
+          }
         }
+        if (armor_ > 0) {
+          armor_ -= hazard_damage;
+        } else {
+          health_ -= hazard_damage;
+        }
+        log_hazard_damage = hazard_damage;
         break;
     }
 
@@ -514,17 +606,24 @@ public:
         // For health ranges 1 and 2, 50% chance to append "Seek Medical Attention"
         int roll = random(100);
         if (health_range < 3 && roll < 50) {
-          PVLOG_NORMAL << "  + Appending health3 (Seek Medical Attention)\n";
-          SFX_health.Select(3);
-          SOUNDQ->Play(SoundToPlay(&SFX_health));
+          // Add cooldown check for health03 (Seek Medical Attention)
+          if (timer_cooldown_seek_medic_.check()) {
+            PVLOG_NORMAL << "  + Appending health03 (Seek Medical Attention) [PLAYING, cooldown started]\n";
+            SFX_health.Select(3);
+            SOUNDQ->Play(SoundToPlay(&SFX_health));
+            timer_cooldown_seek_medic_.start();
+          } else {
+            PVLOG_NORMAL << "  + Appending health03 (Seek Medical Attention) [BLOCKED by cooldown]\n";
+          }
         } else if (health_range < 3) {
-          PVLOG_NORMAL << "  + NO append health3 (failed 50% chance roll)\n";
+          PVLOG_NORMAL << "  + NO append health03 (failed 50% chance roll)\n";
         }
       }
     }
 
     // Print Damage, Health and Armor
-    PVLOG_NORMAL << "DAMAGE: -" << damage << "\n";
+    PVLOG_NORMAL << "DAMAGE: -" << damage << " / ";
+    PVLOG_NORMAL << "HAZARD DAMAGE: -" << log_hazard_damage << "\n";
     PVLOG_NORMAL << "HEALTH: " << health_ << " / ";
     PVLOG_NORMAL << "ARMOR: " << armor_ << "\n";
   }
@@ -601,7 +700,6 @@ public:
         PVLOG_NORMAL << "Activating Hazard.\n";
         current_hazard_ = (Hazard)(1 + random(6));
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-
       } else {
         PVLOG_NORMAL << "Skipping Hazard.\n";
         timer_random_event_.start();
@@ -614,6 +712,7 @@ public:
     // Reset timer when hazard is cleared
     if (current_hazard_ == HAZARD_NONE) {
       timer_hazard_delay_.reset();
+      timer_hazard_surge_.reset();
       return;
     }
 
@@ -624,19 +723,43 @@ public:
       return;
     }
 
-    // Check sequence and apply damage
+    // Check sequence then start surge timer or apply hazard damage
     if (!timer_hazard_delay_.running()) {
-      DoDamage(1, false, DAMAGE_HAZARD);
+      // For Heat/Shock: start surge timer if not already started
+      if ((current_hazard_ == HAZARD_HEA || current_hazard_ == HAZARD_SHO)) {
+        if (!timer_hazard_surge_.active_) {
+          timer_hazard_surge_.configure_random(
+            HEV_HAZARD_SURGE_MIN_MS,
+            HEV_HAZARD_SURGE_MAX_MS
+          );
+          timer_hazard_surge_.start();
+        } else if (timer_hazard_surge_.check()) {
+          PVLOG_NORMAL << "Heat/Shock Hazard expired.\n";
+          current_hazard_ = HAZARD_NONE;
+          timer_hazard_delay_.reset();
+          timer_hazard_surge_.reset();
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+          timer_random_event_.start();
+          return;
+        }
+      }
+      // Apply hazard damage
+      DoDamage(0, false, DAMAGE_HAZARD);
 
       // Clear hazard on death
       if (health_ == 0) {
         current_hazard_ = HAZARD_NONE;
         timer_hazard_delay_.reset();
+        timer_hazard_surge_.reset();
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
         return;
       }
 
-      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
+      // Interval for continuous damage is randomized between min and max
+      timer_hazard_delay_.configure_random(
+        HEV_HAZARD_DECREASE_MIN_MS,
+        HEV_HAZARD_DECREASE_MAX_MS
+      );
       timer_hazard_delay_.start();
     }
   }
@@ -645,6 +768,7 @@ public:
   void Revive() {
     if (health_ == 0) {
       timer_random_event_.reset();
+      timer_hazard_surge_.reset();
     }
   }
 
@@ -794,6 +918,7 @@ public:
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
           timer_random_event_.reset();
           timer_random_event_.start();
+          timer_hazard_delay_.reset();
           return true;
         } else if (mode_volume_) {
             VolumeUp();
@@ -917,16 +1042,40 @@ public:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
-       // (HEV VOICE LINE) Health Alert
-       case EFFECT_USER1:
-         if (health_ == 0) return; // Don't queue health sounds if dead
-         if (SaberBase::sound_number >= 0) {
-           // Files are 1-indexed (health01.wav, health02.wav,health03.wav) but selection is 0-indexed
-           SoundToPlay stp(&SFX_health, (int)SaberBase::sound_number - 1);
-           stp.effect_to_trigger_ = EFFECT_USER1_STEP2;
-           SOUNDQ->Play(stp);
-         }
-         return;
+      // (HEV VOICE LINE) Health Alert
+      case EFFECT_USER1:
+        if (health_ == 0) return; // Don't queue health sounds if dead
+        if (SaberBase::sound_number >= 0) {
+          // Files are 1-indexed (health01.wav, health02.wav,health03.wav) but selection is 0-indexed
+          int idx = (int)SaberBase::sound_number - 1;
+          bool can_play = true;
+          // Check cooldowns for each health alert
+          switch (idx) {
+            case 0: // health01
+              if (!timer_cooldown_death_imminent_.check()) can_play = false;
+              else timer_cooldown_death_imminent_.start();
+              break;
+            case 1: // health02
+              if (!timer_cooldown_health_critical_.check()) can_play = false;
+              else timer_cooldown_health_critical_.start();
+              break;
+            case 2: // health03
+              if (!timer_cooldown_seek_medic_.check()) can_play = false;
+              else timer_cooldown_seek_medic_.start();
+              break;
+            default:
+              break;
+          }
+          if (can_play) {
+            PVLOG_NORMAL << "PLAYING Health Alert. Cooldown started.\n";
+            SoundToPlay stp(&SFX_health, idx);
+            stp.effect_to_trigger_ = EFFECT_USER1_STEP2;
+            SOUNDQ->Play(stp);
+          } else {
+            PVLOG_NORMAL << "BLOCKED Health Alert by cooldown.\n";
+          }
+        }
+        return;
 
       case EFFECT_USER1_STEP2: {
         // Get the sound length when the effect actually triggers for WavLen use.
