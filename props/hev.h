@@ -304,7 +304,9 @@
 //        Default from 0 - 100 Armor is 10 seconds.                    //
 //        Lower = faster recharge.                                     //
 //                                                                     //
-//  HEV_COOLDOWN_HEALTH_ALERT_MS                                       //
+//  HEV_COOLDOWN_SEEK_MEDIC_MS                                         //
+//  HEV_COOLDOWN_HEALTH_CRITICAL_MS                                    //
+//  HEV_COOLDOWN_DEATH_IMMINENT_MS                                     //
 //  HEV_COOLDOWN_HAZARD_ALERT_MS                                       //
 //  HEV_COOLDOWN_MINOR_LACERATION_MS                                   //
 //  HEV_COOLDOWN_MINOR_FRACTURE_MS                                     //
@@ -336,8 +338,17 @@
 #ifndef HEV_ARMOR_INCREASE_MS
 #define HEV_ARMOR_INCREASE_MS 100
 #endif
-#ifndef HEV_COOLDOWN_HEALTH_ALERT_MS
-#define HEV_COOLDOWN_HEALTH_ALERT_MS 10000
+#ifndef HEV_HEALTH_ANNOUNCEMENT_CHANCE
+#define HEV_HEALTH_ANNOUNCEMENT_CHANCE 50
+#endif
+#ifndef HEV_COOLDOWN_SEEK_MEDIC_MS
+#define HEV_COOLDOWN_SEEK_MEDIC_MS 20000
+#endif
+#ifndef HEV_COOLDOWN_HEALTH_CRITICAL_MS
+#define HEV_COOLDOWN_HEALTH_CRITICAL_MS 20000
+#endif
+#ifndef HEV_COOLDOWN_DEATH_IMMINENT_MS
+#define HEV_COOLDOWN_DEATH_IMMINENT_MS 10000
 #endif
 #ifndef HEV_COOLDOWN_HAZARD_ALERT_MS
 #define HEV_COOLDOWN_HAZARD_ALERT_MS 10000
@@ -424,7 +435,9 @@ public:
   //                                Controls healing rate.               //
   // - timer_armor_increase_      - Interval for Armor recharge.         //
   //                                Controls Armor recharge rate.        //
-  // - timer_cooldown_heatlh_alert_                                      //
+  // - timer_cooldown_seek_medic_                                        //
+  // - timer_cooldown_health_critical_                                   //
+  // - timer_cooldown_death_imminent_                                    //
   // - timer_cooldown_hazard_alert_                                      //
   // - timer_cooldown_minor_laceration_                                  //
   // - timer_cooldown_minor_fracture_                                    //
@@ -439,7 +452,9 @@ public:
   HEVTimerBase timer_hazard_after_revive_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
-  HEVTimerBase timer_cooldown_health_alert_;
+  HEVTimerBase timer_cooldown_seek_medic_;
+  HEVTimerBase timer_cooldown_health_critical_;
+  HEVTimerBase timer_cooldown_death_imminent_;
   HEVTimerBase timer_cooldown_hazard_alert_;
   HEVTimerBase timer_cooldown_minor_laceration_;
   HEVTimerBase timer_cooldown_minor_fracture_;
@@ -455,7 +470,9 @@ public:
     timer_hazard_after_revive_.configure(HEV_HAZARD_AFTER_REVIVE_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
-    timer_cooldown_health_alert_.configure(HEV_COOLDOWN_HEALTH_ALERT_MS);
+    timer_cooldown_seek_medic_.configure(HEV_COOLDOWN_SEEK_MEDIC_MS);
+    timer_cooldown_health_critical_.configure(HEV_COOLDOWN_HEALTH_CRITICAL_MS);
+    timer_cooldown_death_imminent_.configure(HEV_COOLDOWN_DEATH_IMMINENT_MS);
     timer_cooldown_hazard_alert_.configure(HEV_COOLDOWN_HAZARD_ALERT_MS);
     timer_cooldown_minor_laceration_.configure(HEV_COOLDOWN_MINOR_LACERATION_MS);
     timer_cooldown_minor_fracture_.configure(HEV_COOLDOWN_MINOR_FRACTURE_MS);
