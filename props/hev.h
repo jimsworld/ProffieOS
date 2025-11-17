@@ -282,10 +282,6 @@
 //  ▪ How often (ms) to check for a Random Hazard.                     //
 //    Higher = less frequent checks.                                   //
 //                                                                     //
-//  HEV_RANDOM_HAZARD_CHANCE                                           //
-//  ▪ Chance (0–100) for a Random Hazard to occur each check.          //
-//    Higher = more frequent Hazards.                                  //
-//                                                                     //
 //  HEV_HAZARD_DELAY_MS                                                //
 //  ▪ Delay (ms) before Hazard damage starts after checking and        //
 //    triggering Hazard. Allows time for HEV Voice Line to finish.     //
@@ -358,8 +354,20 @@
 #ifndef HEV_ARMOR_INCREASE_MS
 #define HEV_ARMOR_INCREASE_MS 100
 #endif
+#ifndef HEV_CLASH_MINOR_LACERATION_CHANCE
+#define HEV_CLASH_MINOR_LACERATION_CHANCE 100
+#endif
+#ifndef HEV_CLASH_MINOR_FRACTURE_CHANCE
+#define HEV_CLASH_MINOR_FRACTURE_CHANCE 100
+#endif
+#ifndef HEV_CLASH_MAJOR_LACERATION_CHANCE
+#define HEV_CLASH_MAJOR_LACERATION_CHANCE 100
+#endif
+#ifndef HEV_CLASH_MAJOR_FRACTURE_CHANCE
+#define HEV_CLASH_MAJOR_FRACTURE_CHANCE 100
+#endif
 #ifndef HEV_HEALTH_ANNOUNCEMENT_CHANCE
-#define HEV_HEALTH_ANNOUNCEMENT_CHANCE 50
+#define HEV_HEALTH_ANNOUNCEMENT_CHANCE 100
 #endif
 #ifndef HEV_COOLDOWN_SEEK_MEDIC_MS
 #define HEV_COOLDOWN_SEEK_MEDIC_MS 20000
@@ -374,19 +382,22 @@
 #define HEV_COOLDOWN_HAZARD_ALERT_MS 10000
 #endif
 #ifndef HEV_COOLDOWN_MINOR_LACERATION_MS
-#define HEV_COOLDOWN_MINOR_LACERATION_MS 10000
+#define HEV_COOLDOWN_MINOR_LACERATION_MS 25000
 #endif
 #ifndef HEV_COOLDOWN_MINOR_FRACTURE_MS
-#define HEV_COOLDOWN_MINOR_FRACTURE_MS 10000
+#define HEV_COOLDOWN_MINOR_FRACTURE_MS 25000
 #endif
 #ifndef HEV_COOLDOWN_MAJOR_LACERATION_MS
-#define HEV_COOLDOWN_MAJOR_LACERATION_MS 10000
+#define HEV_COOLDOWN_MAJOR_LACERATION_MS 25000
 #endif
 #ifndef HEV_COOLDOWN_MAJOR_FRACTURE_MS
-#define HEV_COOLDOWN_MAJOR_FRACTURE_MS 10000
+#define HEV_COOLDOWN_MAJOR_FRACTURE_MS 25000
 #endif
 #ifndef HEV_COOLDOWN_MORPHINE_MS
-#define HEV_COOLDOWN_MORPHINE_MS 300000
+#define HEV_COOLDOWN_MORPHINE_MS 25000
+#endif
+#ifndef HEV_MORPHINE_CHANCE
+#define HEV_MORPHINE_CHANCE 100
 #endif
 
 #include "prop_base.h"
@@ -515,6 +526,8 @@ public:
 
   int health_ = 100;
   int armor_ = 100;
+  int injury_ = 0; // 0 = Lacerations, 1 = Fractures
+  int impact_ = 0; // 0 = Minor, 1 = Major
 
   enum DamageType {
     DAMAGE_PHYSICAL,
@@ -681,8 +694,24 @@ public:
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
 
+    // Capture the Injury type and Impact (sub-sub sound IDs).
+    // Get what clsh sub-sub wav the player is currently playing
+    // then queue up either a Laceration or Fracture voice line.
+    RefPtr<BufferedWavPlayer> subsub = GetWavPlayerPlaying(&SFX_clsh);
+    int injury_type = 0; // 0 = Laceration, 1 = Fracture
+    if (subsub) {
+      injury_type = subsub->current_file_id().GetSubId();
+    }
+    int severity = (damage >= 25) ? 1 : 0; // 0 = Minor, 1 = Major
+
+    injury_ = injury_type;
+    impact_ = severity;
+
     DoDamage(damage, true);
     timer_clash_.start();
+
+    // Queue effect for Injury voice line
+    SaberBase::DoEffect(EFFECT_USER3, 0.0);
   }
 
   // Swings do nothing!
@@ -1053,6 +1082,62 @@ public:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
+      // (HEV VOICE LINE) Injury Detected (Laceration/Fracture)
+      case EFFECT_USER3: {
+        int injury_type = injury_; // 0 = Laceration, 1 = Fracture
+        int impact = impact_;      // 0 = Minor, 1 = Major
+
+        if (injury_type == 0) { // Laceration
+          if (impact == 1) { // Major
+            if (random(100) < HEV_CLASH_MAJOR_LACERATION_CHANCE && timer_cooldown_major_laceration_.check()) {
+              SOUNDQ->Play(SoundToPlay(&SFX_major_laceration));
+              timer_cooldown_major_laceration_.start();
+              if (random(100) < HEV_MORPHINE_CHANCE && timer_cooldown_morphine_.check()) {
+                SOUNDQ->Play(SoundToPlay(&SFX_morphine));
+                timer_cooldown_morphine_.start();
+              }
+            }
+          } else { // Minor
+            if (random(100) < HEV_CLASH_MINOR_LACERATION_CHANCE && timer_cooldown_minor_laceration_.check()) {
+              SOUNDQ->Play(SoundToPlay(&SFX_minor_laceration));
+              timer_cooldown_minor_laceration_.start();
+            }
+          }
+        } else { // Fracture
+          if (impact == 1) { // Major
+            if (random(100) < HEV_CLASH_MAJOR_FRACTURE_CHANCE && timer_cooldown_major_fracture_.check()) {
+              SOUNDQ->Play(SoundToPlay(&SFX_major_fracture));
+              timer_cooldown_major_fracture_.start();
+              if (random(100) < HEV_MORPHINE_CHANCE && timer_cooldown_morphine_.check()) {
+                SOUNDQ->Play(SoundToPlay(&SFX_morphine));
+                timer_cooldown_morphine_.start();
+              }
+            }
+          } else { // Minor
+            if (random(100) < HEV_CLASH_MINOR_FRACTURE_CHANCE && timer_cooldown_minor_fracture_.check()) {
+              SOUNDQ->Play(SoundToPlay(&SFX_minor_fracture));
+              timer_cooldown_minor_fracture_.start();
+            }
+          }
+        }
+        return;
+      }
+
+      // (HEV VOICE LINE) Armor Compromised
+      case EFFECT_USER2:
+        // PVLOG_NORMAL << "******** Queueing SFX_armor_compromised sound with STEP2 trigger\n";
+        SOUNDQ->Play(SoundToPlay(&SFX_armor_compromised, EFFECT_USER2_STEP2));
+        return;
+
+      case EFFECT_USER2_STEP2: {
+        RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_armor_compromised);
+        if (tmp) {
+          SaberBase::sound_length = tmp->length();
+        }
+        // PVLOG_NORMAL << "******** STEP2 effect triggered SaberBase::sound_length = " << SaberBase::sound_length << "\n";
+        return;
+      }
+
       // (HEV VOICE LINE) Health Alert
       case EFFECT_USER1:
         if (health_ == 0) return; // Don't queue health sounds if dead
@@ -1091,21 +1176,6 @@ public:
       case EFFECT_USER1_STEP2: {
         // Get the sound length when the effect actually triggers for WavLen use.
         RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_health);
-        if (tmp) {
-          SaberBase::sound_length = tmp->length();
-        }
-        // PVLOG_NORMAL << "******** STEP2 effect triggered SaberBase::sound_length = " << SaberBase::sound_length << "\n";
-        return;
-      }
-
-      // (HEV VOICE LINE) Armor Compromised
-      case EFFECT_USER2:
-        // PVLOG_NORMAL << "******** Queueing SFX_armor_compromised sound with STEP2 trigger\n";
-        SOUNDQ->Play(SoundToPlay(&SFX_armor_compromised, EFFECT_USER2_STEP2));
-        return;
-
-      case EFFECT_USER2_STEP2: {
-        RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_armor_compromised);
         if (tmp) {
           SaberBase::sound_length = tmp->length();
         }
