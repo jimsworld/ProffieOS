@@ -1675,13 +1675,8 @@ public:
 
 // Start/stop track (3x click & hold POW)
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF):
         if (mode_volume_) return false;
-        if (!mode_track_menu_) {
-          EnterTrackMenu();
-        } else {
-          ExitTrackMenu();
-        }
+        StartOrStopTrack();
         return true;
 
 // Combat Mode ON/OFF (4x click POW)
@@ -1917,7 +1912,7 @@ private:
     }
   }
 
-    // Helper to queue health alert with optional "Seek Medical Attention" append
+  // Helper to queue health alert with optional "Seek Medical Attention" append
   void QueueHealthAlert(int health_range) {
     SaberBase::DoEffect(EFFECT_USER1, 0.0, health_range);
     
@@ -1936,30 +1931,6 @@ private:
       PVLOG_NORMAL << "  + NO append health03 (failed 50% chance roll)\n";
     }
   }
-
-  // ===== Track Menu (basic scaffolding) =====
-  // Tracks are read from the current font's local "tracks" folder.
-  // Example layout: <font>/tracks/*.wav
-  // Provides menu entry/exit and a scan stub.
-
-  bool mode_track_menu_ = false;
-
-  const char* TrackSourcePath() { return "tracks"; } // relative to current font
-
-  void EnterTrackMenu() {
-    if (mode_track_menu_) return;
-    mode_track_menu_ = true;
-    PVLOG_STATUS << "Entering Track Menu (./" << TrackSourcePath() << ")\n";
-    pushMode<MKSPEC<mode::HevMenuSpec>::HevTrackMenu>();
-  }
-
-  void ExitTrackMenu() {
-    if (!mode_track_menu_) return;
-    mode_track_menu_ = false;
-    PVLOG_STATUS << "Exited Track Menu\n";
-  }
-
-  void ScanAvailableTracks()
 };
 
 // HEV menu BoolSetting methods
